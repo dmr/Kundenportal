@@ -51,9 +51,35 @@ export function applyOfferStatus(o, status) {
   return { ...o, angebot: { ...o.angebot, status } };
 }
 
+/* ---- Kalibrierungsmanagement -------------------------------------------- */
+// Schwelle für "bald fällig" (Tage vor Fälligkeit).
+export const CALIB_DUE_SOON_DAYS = 60;
+
+export function addMonths(dateStr, months) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1 + months, d)).toISOString().slice(0, 10);
+}
+export const daysBetween = (fromStr, toStr) =>
+  Math.round((Date.parse(toStr) - Date.parse(fromStr)) / 86400000);
+
+// Nächste Fälligkeit: ab letzter Kalibrierung, sonst ab Auslieferung + Intervall.
+export function calibNextDue(g) {
+  const base = g.letzteKalibrierung || g.ausgeliefert;
+  return addMonths(base, g.kalibrierIntervallMonate);
+}
+// Status relativ zu "heute": überfällig / fällig bald / kalibriert.
+export function calibStatus(g, todayStr) {
+  const days = daysBetween(todayStr, calibNextDue(g));
+  if (days < 0) return "überfällig";
+  if (days <= CALIB_DUE_SOON_DAYS) return "fällig bald";
+  return "kalibriert";
+}
+
 export const STATUS_STYLE = {
   "offen": { bg: "#F3E7CE", fg: "#8A5A00" }, "angenommen": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "abgelehnt": { bg: "#F1D9D1", fg: "#A23C1E" }, "in Klärung": { bg: "#DEE6F2", fg: "#1D4E89" },
+  "kalibriert": { bg: "#DCE7DC", fg: "#3F6B3F" }, "fällig bald": { bg: "#F3E7CE", fg: "#8A5A00" }, "überfällig": { bg: "#F1D9D1", fg: "#A23C1E" },
+  "in Toleranz": { bg: "#DCE7DC", fg: "#3F6B3F" }, "außerhalb Toleranz": { bg: "#F1D9D1", fg: "#A23C1E" },
   "bestätigt": { bg: "#DCE7DC", fg: "#3F6B3F" }, "abgeschlossen": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "unterwegs": { bg: "#DEE6F2", fg: "#1D4E89" }, "zugestellt": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "geplant": { bg: "#EDE6D7", fg: "#7A6F5C" }, "läuft": { bg: "#DEE6F2", fg: "#1D4E89" }, "erledigt": { bg: "#DCE7DC", fg: "#3F6B3F" },
@@ -180,5 +206,24 @@ export const SEED = {
       internePlanung: [],
       emails: [],
     },
+    {
+      id: "o8", customerId: "c1", titel: "Kalibrierung Drehmomentschlüssel DS-200", tlw: null, auftragsNr: null, typ: "Kalibrierung",
+      geraetId: "g1", stage: "anfrage", datum: "2026-05-28",
+      angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
+      emails: [ { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-05-28 09:40", betreff: "Kalibrierung fällig DS-200", body: "Unser Drehmomentschlüssel DS-200 ist überfällig — bitte Kalibrierung einplanen." } ],
+    },
+  ],
+  geraete: [
+    { id: "g1", customerId: "c1", bezeichnung: "Drehmomentschlüssel DS-200", hersteller: "Stahlwille", typ: "Drehmomentschlüssel", seriennummer: "DS200-4471",
+      ausgeliefert: "2024-03-15", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-03-20",
+      zertifikate: [ { nr: "KAL-2025-1182", datum: "2025-03-20", ergebnis: "in Toleranz", gueltigBis: "2026-03-20" } ] },
+    { id: "g2", customerId: "c1", bezeichnung: "Druckmessgerät PM-50", hersteller: "WIKA", typ: "Manometer", seriennummer: "PM50-1192",
+      ausgeliefert: "2025-07-01", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-07-10",
+      zertifikate: [ { nr: "KAL-2025-1450", datum: "2025-07-10", ergebnis: "in Toleranz", gueltigBis: "2026-07-10" } ] },
+    { id: "g3", customerId: "c1", bezeichnung: "Multimeter MX-12", hersteller: "Fluke", typ: "Multimeter", seriennummer: "MX12-8830",
+      ausgeliefert: "2026-01-20", kalibrierIntervallMonate: 24, letzteKalibrierung: null, zertifikate: [] },
+    { id: "g4", customerId: "c2", bezeichnung: "Nivelliergerät NL-7", hersteller: "Leica", typ: "Nivelliergerät", seriennummer: "NL7-3320",
+      ausgeliefert: "2025-02-10", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-02-15",
+      zertifikate: [ { nr: "KAL-2025-0210", datum: "2025-02-15", ergebnis: "in Toleranz", gueltigBis: "2026-02-15" } ] },
   ],
 };

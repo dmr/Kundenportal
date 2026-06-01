@@ -1,5 +1,6 @@
 import { Outlet, useLocation, useNavigate, matchPath, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
+import { calibStatus, today } from "../data/portal.js";
 import NewAnfrageSheet from "./NewAnfrageSheet.jsx";
 
 export default function Layout() {
@@ -13,16 +14,20 @@ export default function Layout() {
   const go = (to) => nav(to);
   const switchView = () => { setPersp(null); nav("/"); };
 
+  const overdue = db.geraete.filter((g) => calibStatus(g, today()) === "überfällig").length;
+
   const navItems = isIntern
     ? [
         { key: "home", label: "Übersicht", short: "Übersicht", active: pathname === "/intern", on: () => go("/intern") },
         { key: "customers", label: "Kunden", short: "Kunden", count: db.customers.length, active: pathname.startsWith("/intern/kunden"), on: () => go("/intern/kunden") },
         { key: "inbox", label: "Posteingang", short: "Post", badge: handlungsbedarf.length, active: pathname === "/intern/posteingang", on: () => go("/intern/posteingang") },
+        { key: "calib", label: "Kalibrierung", short: "Kalib.", badge: overdue, active: pathname === "/intern/kalibrierung", on: () => go("/intern/kalibrierung") },
       ]
     : [
         { key: "home", label: "Meine Aufträge", short: "Aufträge", active: pathname === "/kunde", on: () => go("/kunde") },
+        { key: "geraete", label: "Meine Geräte", short: "Geräte", active: pathname === "/kunde/geraete", on: () => go("/kunde/geraete") },
         ...(meCust?.rahmenvertrag ? [{ key: "contract", label: "Rahmenvertrag", short: "Vertrag", active: pathname === "/kunde/rahmenvertrag", on: () => go("/kunde/rahmenvertrag") }] : []),
-        { key: "new", label: "Neue Anfrage", short: "Neu", accent: true, on: () => setNewAnfrage({ titel: "", typ: "Auslieferung", text: "" }) },
+        { key: "new", label: "Neue Anfrage", short: "Neu", accent: true, on: () => setNewAnfrage({ titel: "", typ: "Kalibrierung", text: "", geraetId: null }) },
       ];
 
   // Breadcrumb aus der aktuellen Route ableiten.
@@ -67,6 +72,8 @@ export default function Layout() {
             {isIntern && crumbCust && <> {" / "} <a onClick={() => go("/intern/kunden/" + crumbCust.id)}>{crumbCust.name}</a></>}
             {ord && <> {" / "} <span className="cur">{ord.titel}</span></>}
             {pathname === "/intern/posteingang" && <> {" / "} <span className="cur">Posteingang</span></>}
+            {pathname === "/intern/kalibrierung" && <> {" / "} <span className="cur">Kalibrierung</span></>}
+            {pathname === "/kunde/geraete" && <> {" / "} <span className="cur">Meine Geräte</span></>}
             {pathname === "/kunde/rahmenvertrag" && <> {" / "} <span className="cur">Rahmenvertrag</span></>}
           </div></div>
 

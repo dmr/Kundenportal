@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { SEED, ME, today, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus } from "./data/portal.js";
+import { SEED, ME, today, addMonths, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus } from "./data/portal.js";
 
 /* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
    sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 2;
+const STORAGE_VERSION = 3;
 
 function loadPersisted() {
   try {
@@ -52,6 +52,8 @@ export function StoreProvider({ children }) {
   const ordersOf = (id) => db.orders.filter((o) => o.customerId === id);
   const custOf = (id) => db.customers.find((c) => c.id === id);
   const orderById = (id) => db.orders.find((o) => o.id === id);
+  const geraeteOf = (id) => db.geraete.filter((g) => g.customerId === id);
+  const geraetById = (id) => db.geraete.find((g) => g.id === id);
   // Sichtbare Teilaufgaben je nach Rolle (Kunde sieht nur sicht="kunde").
   const vTasks = (p) => (isIntern ? p.teilaufgaben : p.teilaufgaben.filter((t) => t.sicht === "kunde"));
 
@@ -117,12 +119,21 @@ export function StoreProvider({ children }) {
     mut(orderId, (o) => ({ ...o, internePlanung: o.internePlanung.map((t) => (t.id === id ? { ...t, status: val } : t)) }));
   }
   function setStage(orderId, key) { mut(orderId, (o) => ({ ...o, stage: key })); }
+  // Kalibrierung erfassen: neues Zertifikat anlegen, letzte Kalibrierung & Fälligkeit fortschreiben.
+  function addCalibration(geraetId, { datum, ergebnis }) {
+    setDb((d) => ({ ...d, geraete: d.geraete.map((g) => {
+      if (g.id !== geraetId) return g;
+      const nr = "KAL-" + datum.slice(0, 4) + "-" + String(Date.now()).slice(-4);
+      const gueltigBis = addMonths(datum, g.kalibrierIntervallMonate);
+      return { ...g, letzteKalibrierung: datum, zertifikate: [{ nr, datum, ergebnis, gueltigBis }, ...g.zertifikate] };
+    }) }));
+  }
   // Legt eine neue Anfrage an und gibt deren id zurück (für Navigation).
   function createAnfrage(f) {
     if (!f?.titel?.trim() || !meCust) return null;
     const id = "n" + Date.now();
     setDb((d) => ({ ...d, orders: [
-      { id, customerId: meCust.id, titel: f.titel.trim(), tlw: null, auftragsNr: null, typ: f.typ, stage: "anfrage", datum: today(),
+      { id, customerId: meCust.id, titel: f.titel.trim(), tlw: null, auftragsNr: null, typ: f.typ, geraetId: f.geraetId || null, stage: "anfrage", datum: today(),
         angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
         emails: [{ dir: "in", from: meCust.email, datum: today() + " 00:00", betreff: "Anfrage: " + f.titel.trim(), body: f.text || "" }] },
       ...d.orders,
@@ -132,8 +143,8 @@ export function StoreProvider({ children }) {
 
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
-    ordersOf, custOf, orderById, rvUsed, vTasks, lastIn, latestIncoming, handlungsbedarf,
-    sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, createAnfrage,
+    ordersOf, custOf, orderById, geraeteOf, geraetById, rvUsed, vTasks, lastIn, latestIncoming, handlungsbedarf,
+    sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

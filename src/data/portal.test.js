@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { suggestStage, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus } from "./portal.js";
+import {
+  suggestStage, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus,
+  addMonths, calibNextDue, calibStatus,
+} from "./portal.js";
 
 // Minimal-Fixtures für die Angebots-/Fortschrittslogik.
 const pos = (over = {}) => ({ id: "p1", betrag: "100,00 €", angenommen: false, teilaufgaben: [], rueckfragen: [], ...over });
@@ -81,5 +84,24 @@ describe("applyRejectOffer", () => {
 describe("applyOfferStatus", () => {
   it("setzt den Angebotsstatus", () => {
     expect(applyOfferStatus(order(), "in Klärung").angebot.status).toBe("in Klärung");
+  });
+});
+
+describe("Kalibrierung", () => {
+  const HEUTE = "2026-06-01";
+  const geraet = (over = {}) => ({ ausgeliefert: "2025-01-01", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-03-20", ...over });
+
+  it("addMonths rechnet Monate inkl. Jahreswechsel", () => {
+    expect(addMonths("2025-03-20", 12)).toBe("2026-03-20");
+    expect(addMonths("2026-01-20", 24)).toBe("2028-01-20");
+  });
+  it("calibNextDue: ab letzter Kalibrierung, sonst ab Auslieferung", () => {
+    expect(calibNextDue(geraet())).toBe("2026-03-20");
+    expect(calibNextDue(geraet({ letzteKalibrierung: null, ausgeliefert: "2026-01-20", kalibrierIntervallMonate: 24 }))).toBe("2028-01-20");
+  });
+  it("calibStatus: überfällig / fällig bald / kalibriert", () => {
+    expect(calibStatus(geraet({ letzteKalibrierung: "2025-03-20" }), HEUTE)).toBe("überfällig"); // fällig 2026-03-20
+    expect(calibStatus(geraet({ letzteKalibrierung: "2025-07-10" }), HEUTE)).toBe("fällig bald"); // fällig 2026-07-10 (39 Tage)
+    expect(calibStatus(geraet({ letzteKalibrierung: null, ausgeliefert: "2026-01-20", kalibrierIntervallMonate: 24 }), HEUTE)).toBe("kalibriert");
   });
 });

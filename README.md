@@ -41,7 +41,7 @@ src/
   styles.css            komplettes Styling
   components/           Layout (Navigation/Breadcrumb), Stepper/Status, Modals
   pages/                Login, InternHome, Customers, CustomerDetail, Inbox,
-                        KundeHome, Contract, OrderDetail
+                        Kalibrierung, KundeHome, Geraete, Contract, OrderDetail
 ```
 
 ### Routen
@@ -52,6 +52,16 @@ src/
 | `/intern` | Team | Übersicht: KPIs, Handlungsbedarf, aktive Vorgänge |
 | `/intern/kunden`, `/intern/kunden/:custId` | Team | Kundenliste / Vorgänge eines Kunden |
 | `/intern/posteingang` | Team | Anfragen & offene Rückfragen |
+| `/intern/kalibrierung` | Team | Kalibrier-Cockpit: Geräte nach Fälligkeit (überfällig/bald/aktuell) |
 | `/kunde` | Kunde | Meine Aufträge + Rahmenvertrags-Budget |
+| `/kunde/geraete` | Kunde | Meine Geräte: Kalibrierstatus, Zertifikate, Kalibrierung anfragen |
 | `/kunde/rahmenvertrag` | Kunde | Budget + eingesetzte Detailerweiterungen |
 | `/auftrag/:ordId` | beide | Auftragsdetail (Stepper, Angebot/Bestellung, Positionen) |
+
+### Kalibrierungsmanagement
+
+Geräte gehören einem Kunden, werden einmal ausgeliefert und im Intervall (typ. 12 Monate)
+kalibriert. Fälligkeit/Status (`kalibriert` / `fällig bald` / `überfällig`) werden am Gerät
+berechnet (`calibStatus`, `calibNextDue`), nicht im Zertifikat gespeichert. Kundenanfragen sind
+**Kalibrierung / Service-Reparatur / Sonstiges** (kein „Auslieferung") und gerätegebunden.
+Hintergrund & Quellen: [`.claude/skills/calibration-management`](.claude/skills/calibration-management/SKILL.md).

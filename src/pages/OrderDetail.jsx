@@ -7,7 +7,7 @@ import PositionSheet from "../components/PositionSheet.jsx";
 
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, rejectOffer, setOfferStatus } = useStore();
+  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, rejectOffer, setOfferStatus } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState(false);
@@ -38,6 +38,9 @@ export default function OrderDetail() {
         <span className="typ">{ord.typ}{ord.auftragsNr ? " · " + ord.auftragsNr : ""}</span>
       </div>
       <div className="lede">{custOf(ord.customerId)?.name} · angelegt {ord.datum}</div>
+      {ord.geraetId && (() => { const g = geraetById(ord.geraetId); return g ? (
+        <div className="devline">🔧 Gerät: <b>{g.bezeichnung}</b> · SN <span className="mono">{g.seriennummer}</span></div>
+      ) : null; })()}
 
       {/* 1) Status zuerst */}
       <Stepper stage={ord.stage} />

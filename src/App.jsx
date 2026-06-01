@@ -6,8 +6,10 @@ import InternHome from "./pages/InternHome.jsx";
 import Customers from "./pages/Customers.jsx";
 import CustomerDetail from "./pages/CustomerDetail.jsx";
 import Inbox from "./pages/Inbox.jsx";
+import Kalibrierung from "./pages/Kalibrierung.jsx";
 import KundeHome from "./pages/KundeHome.jsx";
 import Contract from "./pages/Contract.jsx";
+import Geraete from "./pages/Geraete.jsx";
 import OrderDetail from "./pages/OrderDetail.jsx";
 
 // Rollen-Guards: leiten auf die jeweils passende Startseite um.
@@ -31,8 +33,10 @@ export default function App() {
         <Route path="/intern/kunden" element={<InternOnly><Customers /></InternOnly>} />
         <Route path="/intern/kunden/:custId" element={<InternOnly><CustomerDetail /></InternOnly>} />
         <Route path="/intern/posteingang" element={<InternOnly><Inbox /></InternOnly>} />
+        <Route path="/intern/kalibrierung" element={<InternOnly><Kalibrierung /></InternOnly>} />
 
         <Route path="/kunde" element={<KundeOnly><KundeHome /></KundeOnly>} />
+        <Route path="/kunde/geraete" element={<KundeOnly><Geraete /></KundeOnly>} />
         <Route path="/kunde/rahmenvertrag" element={<KundeOnly><Contract /></KundeOnly>} />
 
         {/* Auftragsdetail für beide Rollen; Zugriffsschutz in der Seite selbst. */}
