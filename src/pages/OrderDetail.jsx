@@ -4,13 +4,12 @@ import { useStore } from "../store.jsx";
 import { STAGES, STATI, stageIdx, suggestStage, parseEUR, fmtEUR } from "../data/portal.js";
 import { Status, Stepper, clickable } from "../components/ui.jsx";
 import PositionSheet from "../components/PositionSheet.jsx";
+import Thread from "../components/Thread.jsx";
 
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
+  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, lastIn, sendGen, setKommResolved, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
-  const [draft, setDraft] = useState("");
-  const [sent, setSent] = useState(false);
   const [querying, setQuerying] = useState(false);
   const [queryText, setQueryText] = useState("");
 
@@ -30,11 +29,6 @@ export default function OrderDetail() {
   const taskDates = offer ? offer.positionen.flatMap((p) => vTasks(p).map((t) => t.faellig).filter(Boolean)) : [];
   const custDue = taskDates.length ? taskDates.slice().sort().at(-1) : (ord.lieferschein?.datum || null);
 
-  const send = () => {
-    if (!draft.trim()) return;
-    sendGen(ord.id, draft);
-    setDraft(""); setSent(true);
-  };
   // Rückfrage zum Angebot: Nachricht senden + Angebot in „in Klärung" – kein „Ablehnen".
   const sendQuery = () => {
     if (!queryText.trim()) return;
@@ -197,18 +191,17 @@ export default function OrderDetail() {
         </>
       )}
 
-      <div className="sec">{isIntern ? "Allgemeine Kommunikation" : "Rückfrage oder weitere Punkte?"}</div>
-      {!isIntern && <div className="muted small" style={{ marginTop: -4, marginBottom: 10 }}>Schreiben Sie uns hier — wir antworten direkt an diesem Vorgang.</div>}
-      {ord.emails.map((m, i) => (
-        <div className={"msg " + m.dir} key={i}>
-          <div className="mh"><span>{m.dir === "in" ? "↓ Kunde · " + m.from : "↑ Wir · " + m.from}</span><span className="mono">{m.datum}</span></div>
-          <div className="subj">{m.betreff}</div>
-          <div className="body">{m.body}</div>
-        </div>
-      ))}
-      <div className="composer2">
-        <textarea placeholder={isIntern ? "Nachricht an den Kunden …" : "Rückfrage oder weiteren Punkt schreiben …"} value={draft} onChange={(e) => { setDraft(e.target.value); setSent(false); }} />
-        <div className="actions"><button className="btn sm" onClick={send}>Senden</button>{sent && <span className="sent">✓ gesendet</span>}</div>
+      <div style={{ marginTop: 24 }}>
+        {!isIntern && <div className="muted small" style={{ marginBottom: 8 }}>Offene Fragen oder weitere Punkte? Schreiben Sie uns hier — wir antworten direkt am Vorgang und Sie markieren das Thema als gelöst, wenn es passt.</div>}
+        <Thread
+          title={isIntern ? "Kommunikation" : "Rückfragen & weitere Punkte"}
+          messages={ord.emails.map((m) => ({ dir: m.dir, datum: m.datum, text: m.body || m.betreff }))}
+          resolved={!!ord.kommGeloest}
+          onToggleResolved={() => setKommResolved(ord.id, !ord.kommGeloest)}
+          onSend={(t) => sendGen(ord.id, t)}
+          placeholder={isIntern ? "Nachricht an den Kunden …" : "Rückfrage oder weiteren Punkt schreiben …"}
+          emptyText="Noch keine Nachrichten zu diesem Vorgang."
+        />
       </div>
 
       {openPos && <PositionSheet ord={ord} pos={openPos} onClose={() => setOpenPosId(null)} />}

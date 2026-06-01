@@ -2,20 +2,14 @@ import { useState } from "react";
 import { useStore } from "../store.jsx";
 import { STATI } from "../data/portal.js";
 import { Status } from "./ui.jsx";
+import Thread from "./Thread.jsx";
 
 /* Positions-Detail als Modal/Bottom-Sheet: Beschreibung, Teilaufgaben (rollenabhängig
    sichtbar/bearbeitbar), Rückfragen-Thread und – für Kunden – "Position annehmen". */
 export default function PositionSheet({ ord, pos, onClose }) {
-  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendPosMsg } = useStore();
-  const [draft, setDraft] = useState("");
-  const [sent, setSent] = useState(false);
+  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendPosMsg, setPosResolved } = useStore();
   const [taskForm, setTaskForm] = useState(null);
 
-  const send = () => {
-    if (!draft.trim()) return;
-    sendPosMsg(ord.id, pos.id, draft);
-    setDraft(""); setSent(true);
-  };
   const addTask = () => {
     if (!taskForm?.titel?.trim()) return;
     addPositionTask(ord.id, pos.id, taskForm);
@@ -62,19 +56,16 @@ export default function PositionSheet({ ord, pos, onClose }) {
             <button className="btn ghost sm" style={{ marginTop: 8 }} onClick={() => setTaskForm({ titel: "", sicht: "kunde", verantwortlich: "", faellig: "" })}>+ Teilaufgabe</button>
           ))}
 
-          <div className="subh">Rückfragen zur Position</div>
-          <div className="qa">
-            {pos.rueckfragen.length === 0 && <div className="muted small">Keine Rückfragen.</div>}
-            {pos.rueckfragen.map((m, i) => (
-              <div className={"m " + m.dir} key={i}><div className="meta">{m.dir === "in" ? "Kunde · " + m.from : "Wir"} · {m.datum}</div>{m.text}</div>
-            ))}
-          </div>
-          <div className="composer2">
-            <textarea placeholder={isIntern ? "Antwort zu dieser Position …" : "Rückfrage zu dieser Position …"} value={draft} onChange={(e) => { setDraft(e.target.value); setSent(false); }} />
-            <div className="actions">
-              <button className="btn sm" onClick={send}>{isIntern ? "Antwort senden" : "Rückfrage senden"}</button>
-              {sent && <span className="sent">✓ gesendet</span>}
-            </div>
+          <div style={{ marginTop: 16 }}>
+            <Thread
+              title="Rückfragen zur Position"
+              messages={pos.rueckfragen.map((m) => ({ dir: m.dir, datum: m.datum, text: m.text }))}
+              resolved={!!pos.rfGeloest}
+              onToggleResolved={() => setPosResolved(ord.id, pos.id, !pos.rfGeloest)}
+              onSend={(t) => sendPosMsg(ord.id, pos.id, t)}
+              placeholder={isIntern ? "Antwort zu dieser Position …" : "Rückfrage zu dieser Position …"}
+              emptyText="Keine Rückfragen."
+            />
           </div>
         </div>
       </div>

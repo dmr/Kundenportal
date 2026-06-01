@@ -83,7 +83,8 @@ export function StoreProvider({ children }) {
   }
   function addEmail(orderId, dir, from, betreff, body) {
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    mut(orderId, (o) => ({ ...o, emails: [...o.emails, { dir, from, datum: stamp, betreff, body }] }));
+    // Neue Nachricht öffnet den Thread automatisch wieder.
+    mut(orderId, (o) => ({ ...o, kommGeloest: false, emails: [...o.emails, { dir, from, datum: stamp, betreff, body }] }));
   }
   function sendGen(orderId, draft) {
     const t = (draft || "").trim(); if (!t) return;
@@ -99,8 +100,11 @@ export function StoreProvider({ children }) {
   function sendPosMsg(orderId, posId, draft) {
     const t = (draft || "").trim(); if (!t) return;
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    mutPos(orderId, posId, (p) => ({ ...p, rueckfragen: [...p.rueckfragen, { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text: t }] }));
+    mutPos(orderId, posId, (p) => ({ ...p, rfGeloest: false, rueckfragen: [...p.rueckfragen, { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text: t }] }));
   }
+  // Threads als gelöst markieren / wieder öffnen.
+  function setKommResolved(orderId, val) { mut(orderId, (o) => ({ ...o, kommGeloest: val })); }
+  function setPosResolved(orderId, posId, val) { mutPos(orderId, posId, (p) => ({ ...p, rfGeloest: val })); }
   // Angebotsfreigabe (alles-oder-nichts) über pure Transform aus portal.js.
   function acceptOffer(orderId) { mut(orderId, applyAcceptOffer); }
   // Angebotsstatus setzen ("offen" / "in Klärung").
@@ -143,7 +147,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, lastIn, latestIncoming, handlungsbedarf,
-    sendGen, sendPosMsg, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
+    sendGen, sendPosMsg, setKommResolved, setPosResolved, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
