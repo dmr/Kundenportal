@@ -41,7 +41,7 @@ src/
   styles.css            komplettes Styling
   components/           Layout (Navigation/Breadcrumb), Stepper/Status, Modals
   pages/                Login, InternHome, Customers, CustomerDetail, Inbox,
-                        Kalibrierung, KundeHome, Geraete, Contract, OrderDetail
+                        Kalibrierung, KundeHome, Geraete, OrderDetail
 ```
 
 ### Routen
@@ -53,10 +53,9 @@ src/
 | `/intern/kunden`, `/intern/kunden/:custId` | Team | Kundenliste / Vorgänge eines Kunden |
 | `/intern/posteingang` | Team | Anfragen & offene Rückfragen |
 | `/intern/kalibrierung` | Team | Kalibrier-Cockpit: Geräte nach Fälligkeit (überfällig/bald/aktuell) |
-| `/kunde` | Kunde | Meine Aufträge + Rahmenvertrags-Budget |
+| `/kunde` | Kunde | Meine Aufträge (aktiv + abgeschlossen) |
 | `/kunde/geraete` | Kunde | Meine Geräte: Kalibrierstatus, Zertifikate, Kalibrierung anfragen |
-| `/kunde/rahmenvertrag` | Kunde | Budget + eingesetzte Detailerweiterungen |
-| `/auftrag/:ordId` | beide | Auftragsdetail (Stepper, Angebot/Bestellung, Positionen) |
+| `/auftrag/:ordId` | beide | Auftragsdetail (Stepper, Status, Themen, Rückfragen) |
 
 ### Kalibrierungsmanagement
 

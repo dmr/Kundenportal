@@ -8,7 +8,6 @@ import CustomerDetail from "./pages/CustomerDetail.jsx";
 import Inbox from "./pages/Inbox.jsx";
 import Kalibrierung from "./pages/Kalibrierung.jsx";
 import KundeHome from "./pages/KundeHome.jsx";
-import Contract from "./pages/Contract.jsx";
 import Geraete from "./pages/Geraete.jsx";
 import OrderDetail from "./pages/OrderDetail.jsx";
 
@@ -37,7 +36,6 @@ export default function App() {
 
         <Route path="/kunde" element={<KundeOnly><KundeHome /></KundeOnly>} />
         <Route path="/kunde/geraete" element={<KundeOnly><Geraete /></KundeOnly>} />
-        <Route path="/kunde/rahmenvertrag" element={<KundeOnly><Contract /></KundeOnly>} />
 
         {/* Auftragsdetail für beide Rollen; Zugriffsschutz in der Seite selbst. */}
         <Route path="/auftrag/:ordId" element={<OrderDetail />} />

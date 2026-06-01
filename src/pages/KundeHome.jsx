@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
-import { STAGES, stageIdx, fmtH } from "../data/portal.js";
+import { STAGES, stageIdx } from "../data/portal.js";
 import { clickable } from "../components/ui.jsx";
 
 function OrderRow({ o, onClick, done }) {
@@ -21,7 +21,7 @@ function OrderRow({ o, onClick, done }) {
 }
 
 export default function KundeHome() {
-  const { meCust, rvUsed, ordersOf } = useStore();
+  const { meCust, ordersOf } = useStore();
   const nav = useNavigate();
   const orders = meCust ? ordersOf(meCust.id) : [];
   const aktiv = orders.filter((o) => o.stage !== "abgeschlossen");
@@ -31,21 +31,6 @@ export default function KundeHome() {
     <>
       <div className="h1 serif">Ihre Aufträge</div>
       <div className="lede">Status auf einen Blick — inklusive Anfragen ohne Auftrag.</div>
-
-      {meCust?.rahmenvertrag && (() => {
-        const rv = meCust.rahmenvertrag, used = rvUsed(meCust), rem = rv.budgetStunden - used;
-        return (
-          <div className="rv">
-            <div className="top">
-              <div className="sec" style={{ margin: 0 }}>Service-Rahmenvertrag {rv.nr}</div>
-              <div className="rem">{fmtH(rem)} <span style={{ fontSize: 14, color: "var(--muted)", fontWeight: 400 }}>verfügbar</span></div>
-            </div>
-            <div className="bar"><div className="fill" style={{ width: (used / rv.budgetStunden * 100) + "%" }} /></div>
-            <div className="scale"><span>{fmtH(used)} genutzt</span><span>Budget {fmtH(rv.budgetStunden)}</span></div>
-            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>Für kurzfristige Detailerweiterungen ohne neues Angebot.</div>
-          </div>
-        );
-      })()}
 
       <div className="sec" style={{ marginTop: 4 }}>Aktive Aufträge</div>
       <div className="card">

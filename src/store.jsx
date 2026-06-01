@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { SEED, ME, today, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus, applyHistorieEntry } from "./data/portal.js";
+import { SEED, ME, today, applyAcceptOffer, applyRejectOffer, applyOfferStatus, applyHistorieEntry } from "./data/portal.js";
 
 /* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
    sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 6;
+const STORAGE_VERSION = 7;
 
 function loadPersisted() {
   try {
@@ -145,7 +145,7 @@ export function StoreProvider({ children }) {
 
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
-    ordersOf, custOf, orderById, geraeteOf, geraetById, rvUsed, vTasks, lastIn, latestIncoming, handlungsbedarf,
+    ordersOf, custOf, orderById, geraeteOf, geraetById, vTasks, lastIn, latestIncoming, handlungsbedarf,
     sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

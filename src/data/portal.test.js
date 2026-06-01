@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  suggestStage, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus,
+  suggestStage, applyAcceptOffer, applyRejectOffer, applyOfferStatus,
   addMonths, calibNextDue, calibStatus, applyHistorieEntry,
 } from "./portal.js";
 
@@ -41,16 +41,6 @@ describe("suggestStage", () => {
       angebot: { status: "angenommen", positionen: [pos({ angenommen: true, teilaufgaben: [{ status: "erledigt" }] })] },
       bestellung: { nr: "BE-1" }, lieferschein: { nr: "LS-1", status: "zugestellt" },
     }))).toBe("abgeschlossen");
-  });
-});
-
-describe("rvUsed", () => {
-  it("summiert die Einträge", () => {
-    expect(rvUsed({ rahmenvertrag: { eintraege: [{ stunden: 2 }, { stunden: 1.5 }] } })).toBe(3.5);
-  });
-  it("ohne Rahmenvertrag → 0", () => {
-    expect(rvUsed({ rahmenvertrag: null })).toBe(0);
-    expect(rvUsed(undefined)).toBe(0);
   });
 });
 

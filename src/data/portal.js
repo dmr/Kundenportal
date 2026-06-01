@@ -29,9 +29,6 @@ export function suggestStage(o) {
   return allTasksDone && delivered ? "abgeschlossen" : "lieferung";
 }
 
-/* Verbleibendes Rahmenvertrags-Budget: budgetStunden − Σ eintraege.stunden. */
-export const rvUsed = (c) => (c?.rahmenvertrag ? c.rahmenvertrag.eintraege.reduce((s, e) => s + e.stunden, 0) : 0);
-
 /* Pure Transforms für die Angebotsfreigabe (testbar, ohne React/State). */
 export function applyAcceptOffer(o) {
   if (!o.angebot) return o;
@@ -104,19 +101,14 @@ export const STATUS_STYLE = {
   "geplant": { bg: "#EDE6D7", fg: "#7A6F5C" }, "läuft": { bg: "#DEE6F2", fg: "#1D4E89" }, "erledigt": { bg: "#DCE7DC", fg: "#3F6B3F" },
 };
 
-export const fmtH = (n) => (Math.round(n * 10) / 10).toString().replace(".", ",") + " h";
 export const today = () => new Date().toISOString().slice(0, 10);
 export const parseEUR = (s) => parseFloat(String(s).replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".")) || 0;
 export const fmtEUR = (n) => n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
 export const SEED = {
   customers: [
-    { id: "c1", name: "IGBT Modulhersteller A", kontakt: "D. Meier", email: "einkauf@igbt-modulhersteller-a.de", ort: "Augsburg",
-      rahmenvertrag: { nr: "RV-2026-014", budgetStunden: 20, eintraege: [
-        { titel: "Zusätzliche Halterung montiert", stunden: 2, datum: "2026-05-14" },
-        { titel: "Kurzfristige Terminverschiebung organisiert", stunden: 1.5, datum: "2026-05-19" },
-        { titel: "Sonderbeschriftung TLW 763", stunden: 3, datum: "2026-05-22" } ] } },
-    { id: "c2", name: "Thyristor Hersteller B", kontakt: "P. Schneider", email: "disposition@thyristor-hersteller-b.de", ort: "Bern", rahmenvertrag: null },
+    { id: "c1", name: "IGBT Modulhersteller A", kontakt: "D. Meier", email: "einkauf@igbt-modulhersteller-a.de", ort: "Augsburg" },
+    { id: "c2", name: "Thyristor Hersteller B", kontakt: "P. Schneider", email: "disposition@thyristor-hersteller-b.de", ort: "Bern" },
   ],
   orders: [
     {

@@ -26,7 +26,6 @@ export default function Layout() {
     : [
         { key: "home", label: "Meine Aufträge", short: "Aufträge", active: pathname === "/kunde", on: () => go("/kunde") },
         { key: "geraete", label: "Meine Geräte", short: "Geräte", active: pathname === "/kunde/geraete", on: () => go("/kunde/geraete") },
-        ...(meCust?.rahmenvertrag ? [{ key: "contract", label: "Rahmenvertrag", short: "Vertrag", active: pathname === "/kunde/rahmenvertrag", on: () => go("/kunde/rahmenvertrag") }] : []),
         { key: "new", label: "Neue Anfrage", short: "Neu", accent: true, on: () => setNewAnfrage({ titel: "", typ: "Kalibrierung", text: "", geraetId: null }) },
       ];
 
@@ -74,7 +73,6 @@ export default function Layout() {
             {pathname === "/intern/posteingang" && <> {" / "} <span className="cur">Posteingang</span></>}
             {pathname === "/intern/kalibrierung" && <> {" / "} <span className="cur">Kalibrierung</span></>}
             {pathname === "/kunde/geraete" && <> {" / "} <span className="cur">Meine Geräte</span></>}
-            {pathname === "/kunde/rahmenvertrag" && <> {" / "} <span className="cur">Rahmenvertrag</span></>}
           </div></div>
 
           <div className="content"><Outlet /></div>
