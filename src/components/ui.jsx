@@ -5,22 +5,21 @@ export function Status({ s }) {
   return <span className="chip" style={{ background: st.bg, color: st.fg }}>{s}</span>;
 }
 
-export function AccChip({ p }) {
-  return p.angenommen
-    ? <span className="chip" style={{ background: "#DCE7DC", color: "#3F6B3F" }}>✓ angenommen</span>
-    : <span className="chip" style={{ background: "#F3E7CE", color: "#8A5A00" }}>offen</span>;
-}
-
 export function Stepper({ stage }) {
   const ci = stageIdx(stage);
+  // Beim Abschluss (letzte Stage) ist auch der letzte Punkt erledigt, nicht "current".
+  const isFinal = ci === STAGES.length - 1;
   return (
     <div className="stepper">
-      {STAGES.map((s, i) => (
-        <div key={s.key} className={"step " + (i < ci ? "done" : i === ci ? "cur" : "")}>
-          <span className="pt" />
-          <div className="lb">{s.label}</div>
-        </div>
-      ))}
+      {STAGES.map((s, i) => {
+        const cls = i < ci || (isFinal && i === ci) ? "done" : i === ci ? "cur" : "";
+        return (
+          <div key={s.key} className={"step " + cls}>
+            <span className="pt" />
+            <div className="lb">{s.label}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }

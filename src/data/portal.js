@@ -14,8 +14,24 @@ export const STAGES = [
 ];
 export const stageIdx = (k) => STAGES.findIndex((s) => s.key === k);
 
+/* Hybrid-Fortschritt: leitet aus den vorhandenen Artefakten + Teilaufgaben eine
+   *vorgeschlagene* Stage ab. Das Team kann sie übernehmen oder übersteuern. */
+export function suggestStage(o) {
+  if (!o.angebot) return "anfrage";
+  const positionen = o.angebot.positionen || [];
+  if (o.angebot.status === "abgelehnt") return "angebot";
+  const allAccepted = positionen.length > 0 && positionen.every((p) => p.angenommen);
+  if (!allAccepted) return "angebot";
+  if (!o.bestellung) return "auftrag";
+  if (!o.lieferschein) return "bestellung";
+  const allTasksDone = positionen.every((p) => p.teilaufgaben.every((t) => t.status === "erledigt"));
+  const delivered = ["zugestellt", "abgeschlossen"].includes(o.lieferschein.status);
+  return allTasksDone && delivered ? "abgeschlossen" : "lieferung";
+}
+
 export const STATUS_STYLE = {
   "offen": { bg: "#F3E7CE", fg: "#8A5A00" }, "angenommen": { bg: "#DCE7DC", fg: "#3F6B3F" },
+  "abgelehnt": { bg: "#F1D9D1", fg: "#A23C1E" },
   "bestätigt": { bg: "#DCE7DC", fg: "#3F6B3F" }, "abgeschlossen": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "unterwegs": { bg: "#DEE6F2", fg: "#1D4E89" }, "zugestellt": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "geplant": { bg: "#EDE6D7", fg: "#7A6F5C" }, "läuft": { bg: "#DEE6F2", fg: "#1D4E89" }, "erledigt": { bg: "#DCE7DC", fg: "#3F6B3F" },
@@ -97,6 +113,50 @@ export const SEED = {
       lieferschein: { nr: "LS-89770", datum: "2026-04-28", status: "zugestellt" },
       internePlanung: [],
       emails: [ { dir: "in", from: "disposition@schneider-bau.ch", datum: "2026-04-29 14:20", betreff: "Empfang bestätigt", body: "Ware ist eingetroffen, vielen Dank." } ],
+    },
+    {
+      id: "o5", customerId: "c1", titel: "Jahreswartung TLW 763", tlw: "TLW 763", auftragsNr: "5044", typ: "Service",
+      stage: "abgeschlossen", datum: "2026-03-03",
+      angebot: { nr: "AN-2026-0299", datum: "2026-03-03", status: "angenommen", positionen: [
+        { id: "p1", titel: "Jahreswartung & Sicherheitsprüfung", betrag: "1.180,00 €", angenommen: true,
+          beschreibung: "Komplette Jahreswartung nach Herstellervorgabe inkl. Sicherheitsprüfung und Prüfprotokoll.",
+          teilaufgaben: [
+            { id: "a1", titel: "Wartung durchführen", status: "erledigt", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-03-12" },
+            { id: "a2", titel: "Prüfprotokoll übergeben", status: "erledigt", sicht: "kunde", verantwortlich: "Technik", faellig: "2026-03-14" } ],
+          rueckfragen: [] } ] },
+      bestellung: { nr: "BE-76401", datum: "2026-03-05", status: "abgeschlossen" },
+      lieferschein: { nr: "LS-89610", datum: "2026-03-14", status: "zugestellt" },
+      internePlanung: [],
+      emails: [ { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-03-15 08:30", betreff: "Wartung erledigt", body: "Alles bestens, danke für die schnelle Abwicklung." } ],
+    },
+    {
+      id: "o6", customerId: "c1", titel: "Auslieferung Anbauteile", tlw: "TLW 763", auftragsNr: "5018", typ: "Auslieferung",
+      stage: "abgeschlossen", datum: "2026-02-09",
+      angebot: { nr: "AN-2026-0188", datum: "2026-02-09", status: "angenommen", positionen: [
+        { id: "p1", titel: "Lieferung & Montage Anbauteile", betrag: "2.460,00 €", angenommen: true,
+          beschreibung: "Lieferung der Anbauteile inkl. Montage und Funktionsprüfung vor Ort.",
+          teilaufgaben: [
+            { id: "a1", titel: "Teile liefern", status: "erledigt", sicht: "kunde", verantwortlich: "Fahrer K.", faellig: "2026-02-18" },
+            { id: "a2", titel: "Montage & Abnahme", status: "erledigt", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-02-20" } ],
+          rueckfragen: [] } ] },
+      bestellung: { nr: "BE-76220", datum: "2026-02-11", status: "abgeschlossen" },
+      lieferschein: { nr: "LS-89412", datum: "2026-02-20", status: "zugestellt" },
+      internePlanung: [],
+      emails: [],
+    },
+    {
+      id: "o7", customerId: "c2", titel: "Service Hebebühne", tlw: "TLW 410", auftragsNr: "4998", typ: "Service",
+      stage: "abgeschlossen", datum: "2026-02-24",
+      angebot: { nr: "AN-2026-0240", datum: "2026-02-24", status: "angenommen", positionen: [
+        { id: "p1", titel: "Service & Kalibrierung Hebebühne", betrag: "880,00 €", angenommen: true,
+          beschreibung: "Service der Hebebühne inkl. Kalibrierung und Sicherheitsabnahme.",
+          teilaufgaben: [
+            { id: "a1", titel: "Service & Kalibrierung", status: "erledigt", sicht: "kunde", verantwortlich: "Technik", faellig: "2026-03-04" } ],
+          rueckfragen: [] } ] },
+      bestellung: { nr: "BE-76310", datum: "2026-02-26", status: "abgeschlossen" },
+      lieferschein: { nr: "LS-89505", datum: "2026-03-04", status: "zugestellt" },
+      internePlanung: [],
+      emails: [],
     },
   ],
 };

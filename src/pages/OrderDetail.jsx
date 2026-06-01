@@ -1,24 +1,28 @@
 import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
-import { STAGES, STATI, stageIdx, parseEUR, fmtEUR } from "../data/portal.js";
-import { Status, AccChip, Stepper } from "../components/ui.jsx";
+import { STAGES, STATI, stageIdx, suggestStage, parseEUR, fmtEUR } from "../data/portal.js";
+import { Status, Stepper } from "../components/ui.jsx";
 import PositionSheet from "../components/PositionSheet.jsx";
 
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage } = useStore();
+  const { orderById, custOf, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, rejectOffer } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState("");
 
   const ord = orderById(ordId);
   if (!ord) return <Navigate to={isIntern ? "/intern" : "/kunde"} replace />;
-  // Kunde darf nur eigene Vorgänge sehen.
   if (!isIntern && ord.customerId !== meCust?.id) return <Navigate to="/kunde" replace />;
 
   const openPos = openPosId ? ord.angebot?.positionen.find((p) => p.id === openPosId) : null;
   const ci = stageIdx(ord.stage), s = STAGES[ci];
+  const suggested = suggestStage(ord);
+  const offer = ord.angebot;
+  const total = offer ? offer.positionen.reduce((sum, p) => sum + parseEUR(p.betrag), 0) : 0;
 
   const send = () => {
     if (!draft.trim()) return;
@@ -35,34 +39,73 @@ export default function OrderDetail() {
       </div>
       <div className="lede">{custOf(ord.customerId)?.name} · angelegt {ord.datum}</div>
 
+      {/* 1) Status zuerst */}
       <Stepper stage={ord.stage} />
       <div className="statusbox">
         <div className="big">Schritt {ci + 1} von 6 — {s.kunde}</div>
         <div className="sm">{ci < STAGES.length - 1 ? "Nächster Schritt: " + STAGES[ci + 1].label : "Vorgang abgeschlossen."}</div>
-        {ci < stageIdx("auftrag") && <div className="warnline">⚠ Noch <b>&nbsp;kein Auftrag</b>.</div>}
+        {!offer && <div className="warnline">⚠ Noch <b>&nbsp;kein Angebot</b> — wir prüfen Ihre Anfrage.</div>}
+        {offer && ci < stageIdx("auftrag") && <div className="warnline">⚠ Noch <b>&nbsp;kein Auftrag</b>.</div>}
         {ci >= stageIdx("auftrag") && ci < stageIdx("bestellung") && <div className="warnline">⚠ Auftrag bestätigt, aber noch <b>&nbsp;keine Bestellung</b>.</div>}
       </div>
 
+      {/* Team: Stage setzen + Hybrid-Vorschlag aus Teilaufgaben/Artefakten */}
       {isIntern && (
         <div className="frm" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
           <span className="typ">Status setzen:</span>
           <select value={ord.stage} onChange={(e) => setStage(ord.id, e.target.value)} style={{ flex: "0 0 auto", width: "auto" }}>
             {STAGES.map((st) => <option key={st.key} value={st.key}>{st.label}</option>)}
           </select>
-          <span className="note" style={{ margin: 0 }}>Nur intern – steuert den Fortschritt für den Kunden.</span>
+          {suggested !== ord.stage
+            ? <button className="btn ghost sm" onClick={() => setStage(ord.id, suggested)}>Vorschlag übernehmen: {STAGES[stageIdx(suggested)].label}</button>
+            : <span className="sent">✓ passt zum Stand</span>}
+          <span className="note" style={{ margin: 0 }}>Vorschlag aus Teilaufgaben & Belegen – übersteuerbar.</span>
         </div>
       )}
 
-      {ord.angebot ? (
+      {/* 2) Nächste Aktion: Angebotsfreigabe (nur Kunde, nur wenn offen).
+            Einziger Ort, an dem der Gesamtbetrag prominent zur Entscheidung steht. */}
+      {!isIntern && offer && offer.status === "offen" && (
+        <div className="offerbox">
+          <div className="subh" style={{ marginTop: 0 }}>Angebot {offer.nr} prüfen</div>
+          <div className="total">{fmtEUR(total)}</div>
+          <div className="muted small" style={{ marginBottom: 14 }}>{offer.positionen.length} Position(en) · vom {offer.datum}</div>
+          {!rejecting ? (
+            <>
+              <div className="offer-actions">
+                <button className="btn" onClick={() => acceptOffer(ord.id)}>Angebot annehmen</button>
+                <button className="btn ghost" onClick={() => setRejecting(true)}>Ablehnen</button>
+              </div>
+              <div className="note" style={{ fontStyle: "normal" }}>Einzelne Position unklar? Unten öffnen und eine Rückfrage stellen — Annahme gilt fürs ganze Angebot.</div>
+            </>
+          ) : (
+            <>
+              <textarea className="reasonbox" placeholder="Grund (optional) – z. B. Budget, Termin, Umfang" value={reason} onChange={(e) => setReason(e.target.value)} />
+              <div className="offer-actions">
+                <button className="btn" onClick={() => { rejectOffer(ord.id, reason); setRejecting(false); setReason(""); }}>Ablehnung senden</button>
+                <button className="btn ghost" onClick={() => setRejecting(false)}>Zurück</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      {!isIntern && offer && offer.status === "angenommen" && (
+        <div className="confirmbox ok">✓ Angebot angenommen — wir starten die Umsetzung. Den Fortschritt sehen Sie oben.</div>
+      )}
+      {!isIntern && offer && offer.status === "abgelehnt" && (
+        <div className="confirmbox no">Angebot abgelehnt. Möchten Sie etwas anpassen? Schreiben Sie uns unten.</div>
+      )}
+
+      {/* 3) Inhalt: Angebot/Bestellung & Positionen — Status führt, Preise dezent */}
+      {offer ? (
         <>
           <div className="dual">
             <div className="sumcard">
               <div className="subh" style={{ margin: 0 }}>Angebot</div>
-              <div className="sumnr mono">{ord.angebot.nr}</div>
-              <div className="big">{fmtEUR(ord.angebot.positionen.reduce((sum, p) => sum + parseEUR(p.betrag), 0))}</div>
-              <div className="summeta">vom {ord.angebot.datum}</div>
-              <Status s={ord.angebot.status} />
-              <div className="accprog">{ord.angebot.positionen.filter((p) => p.angenommen).length} / {ord.angebot.positionen.length} Positionen angenommen</div>
+              <div className="sumnr mono">{offer.nr}</div>
+              <Status s={offer.status} />
+              <div className="sumtotal">{fmtEUR(total)} · vom {offer.datum}</div>
+              <div className="accprog">{isIntern ? offer.positionen.filter((p) => p.angenommen).length + " / " + offer.positionen.length + " Positionen angenommen" : offer.positionen.length + " Position(en)"}</div>
             </div>
             <div className="sumcard">
               <div className="subh" style={{ margin: 0 }}>Bestellung</div>
@@ -75,7 +118,7 @@ export default function OrderDetail() {
 
           <div className="sec" style={{ marginTop: 4 }}>Positionen <span className="note" style={{ margin: 0, fontStyle: "normal" }}>· antippen für Details</span></div>
           <div className="card">
-            {ord.angebot.positionen.map((p) => {
+            {offer.positionen.map((p) => {
               const done = vTasks(p).filter((t) => t.status === "erledigt").length, tot = vTasks(p).length;
               return (
                 <div className="row" key={p.id} onClick={() => setOpenPosId(p.id)}>
@@ -84,14 +127,14 @@ export default function OrderDetail() {
                     <div className="meta">{tot > 0 ? done + "/" + tot + " Teilaufgaben erledigt" : "keine Teilaufgaben"} · {p.rueckfragen.length} Rückfragen</div>
                   </div>
                   {isIntern && lastIn(p.rueckfragen) && <span className="chip" style={{ background: "#F3E7CE", color: "#8A5A00" }}>Rückfrage offen</span>}
-                  <span className="pbetrag">{p.betrag}</span><AccChip p={p} /><span className="chev">›</span>
+                  <span className="pbetrag">{p.betrag}</span><span className="chev">›</span>
                 </div>
               );
             })}
           </div>
         </>
       ) : (
-        <div className="note" style={{ fontStyle: "normal", marginBottom: 10 }}>Für diese Anfrage besteht noch kein Angebot mit Positionen. Kommunikation unten.</div>
+        <div className="note" style={{ fontStyle: "normal", marginBottom: 10 }}>Zu dieser Anfrage gibt es noch kein Angebot. Sobald wir geprüft haben, erstellen wir ein Angebot mit Positionen — Sie sehen es hier.</div>
       )}
 
       {isIntern && ord.internePlanung?.length > 0 && (
@@ -115,8 +158,8 @@ export default function OrderDetail() {
         </>
       )}
 
-      <div className="sec">Allgemeine Kommunikation</div>
-      {ord.emails.length === 0 && <div className="muted small" style={{ marginBottom: 10 }}>Noch keine allgemeinen Nachrichten.</div>}
+      <div className="sec">{isIntern ? "Allgemeine Kommunikation" : "Nachrichten & Rückfragen"}</div>
+      {ord.emails.length === 0 && <div className="muted small" style={{ marginBottom: 10 }}>Noch keine Nachrichten.</div>}
       {ord.emails.map((m, i) => (
         <div className={"msg " + m.dir} key={i}>
           <div className="mh"><span>{m.dir === "in" ? "↓ Kunde · " + m.from : "↑ Wir · " + m.from}</span><span className="mono">{m.datum}</span></div>
@@ -125,7 +168,7 @@ export default function OrderDetail() {
         </div>
       ))}
       <div className="composer2">
-        <textarea placeholder={isIntern ? "Nachricht an den Kunden …" : "Nachricht zum Auftrag …"} value={draft} onChange={(e) => { setDraft(e.target.value); setSent(false); }} />
+        <textarea placeholder={isIntern ? "Nachricht an den Kunden …" : "Nachricht oder Rückfrage zum Auftrag …"} value={draft} onChange={(e) => { setDraft(e.target.value); setSent(false); }} />
         <div className="actions"><button className="btn sm" onClick={send}>Senden</button>{sent && <span className="sent">✓ gesendet</span>}</div>
       </div>
 

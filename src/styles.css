@@ -3,7 +3,7 @@
 :root{--paper:#F4EFE6;--panel:#FBF8F2;--ink:#211C14;--muted:#7A6F5C;--line:#E2D9C8;--accent:#B5460F;--accent-soft:#F0E2D6;--intern:#1D4E89;}
 .tlw-root{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;line-height:1.45;background-image:radial-gradient(rgba(0,0,0,.018) 1px,transparent 1px);background-size:4px 4px;}
 .mono{font-family:'IBM Plex Mono',monospace;} .serif{font-family:'Fraunces',Georgia,serif;} .muted{color:var(--muted);} .small{font-size:13px;}
-.pbetrag{font-family:'IBM Plex Mono';font-size:15px;}
+.pbetrag{font-family:'IBM Plex Mono';font-size:13px;color:var(--muted);font-weight:400;white-space:nowrap;}
 .login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;}
 .login .mark{font-family:'Fraunces';font-weight:800;font-size:30px;letter-spacing:-.02em;} .login .sub{color:var(--muted);font-size:13px;letter-spacing:.1em;text-transform:uppercase;margin:6px 0 32px;}
 .login .grp{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:720px;}
@@ -58,7 +58,21 @@
 .frm input:focus,.frm textarea:focus,.frm select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
 .dual{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 22px;}
 .sumcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
-.sumcard .sumnr{font-size:15px;font-weight:600;margin:8px 0 2px;} .sumcard .summeta{font-size:12.5px;color:var(--muted);margin-bottom:10px;} .sumcard .accprog{font-size:12.5px;color:var(--muted);margin-top:12px;} .sumcard .big{font-family:'Fraunces';font-weight:700;font-size:22px;margin:2px 0 8px;}
+.sumcard .sumnr{font-size:15px;font-weight:600;margin:8px 0 8px;} .sumcard .summeta{font-size:12.5px;color:var(--muted);margin-bottom:10px;} .sumcard .accprog{font-size:12.5px;color:var(--muted);margin-top:12px;} .sumcard .big{font-family:'Fraunces';font-weight:700;font-size:22px;margin:2px 0 8px;}
+/* Betrag im Angebots-Card bewusst dezent (kein Blickfang vor der Freigabe). */
+.sumcard .sumtotal{font-family:'IBM Plex Mono';font-size:13.5px;color:var(--muted);margin:10px 0 0;}
+/* Freigabe-Box: einziger Ort, an dem der Gesamtbetrag prominent zur Entscheidung steht. */
+.offerbox{background:#FCF6F0;border:1px solid var(--accent-soft);border-left:4px solid var(--accent);border-radius:12px;padding:18px 20px;margin-bottom:22px;}
+.offerbox .total{font-family:'Fraunces';font-weight:800;font-size:32px;letter-spacing:-.02em;color:var(--ink);line-height:1;}
+.offerbox .offer-actions{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px;}
+.offerbox .reasonbox{width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:14px;background:#fff;resize:vertical;margin:6px 0 10px;}
+.offerbox .reasonbox:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
+.confirmbox{border-radius:12px;padding:14px 18px;margin-bottom:22px;font-size:14px;}
+.confirmbox.ok{background:#DCE7DC;border:1px solid #Bcd3Bc;color:#2F5A2F;}
+.confirmbox.no{background:#F1D9D1;border:1px solid #E3BCAE;color:#8A3A1E;}
+.done-group .row{opacity:.78;}
+.linkbtn{background:none;border:none;font:inherit;font-size:13.5px;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+.linkbtn.muted{color:var(--muted);}
 .subh{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:16px 0 8px;}
 .internbadge{font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:#DEE6F2;color:var(--intern);padding:2px 7px;border-radius:20px;font-weight:600;}
 .statsel{font:inherit;font-size:12px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer;}

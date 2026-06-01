@@ -90,12 +90,24 @@ export function StoreProvider({ children }) {
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
     mutPos(orderId, posId, (p) => ({ ...p, rueckfragen: [...p.rueckfragen, { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text: t }] }));
   }
-  function acceptPosition(orderId, posId) {
+  // Ganzes Angebot annehmen (alles-oder-nichts): alle Positionen angenommen,
+  // Status "angenommen", Stage angebot→auftrag.
+  function acceptOffer(orderId) {
     setDb((d) => ({ ...d, orders: d.orders.map((o) => {
-      if (o.id !== orderId) return o;
-      const positionen = o.angebot.positionen.map((p) => (p.id === posId ? { ...p, angenommen: true } : p));
-      const all = positionen.every((p) => p.angenommen);
-      return { ...o, angebot: { ...o.angebot, status: all ? "angenommen" : o.angebot.status, positionen }, stage: all && o.stage === "angebot" ? "auftrag" : o.stage };
+      if (o.id !== orderId || !o.angebot) return o;
+      const positionen = o.angebot.positionen.map((p) => ({ ...p, angenommen: true }));
+      return { ...o, angebot: { ...o.angebot, status: "angenommen", positionen }, stage: o.stage === "angebot" ? "auftrag" : o.stage };
+    }) }));
+  }
+  // Angebot ablehnen: Status "abgelehnt"; optionale Begründung als eingehende Nachricht.
+  function rejectOffer(orderId, reason) {
+    const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+    setDb((d) => ({ ...d, orders: d.orders.map((o) => {
+      if (o.id !== orderId || !o.angebot) return o;
+      const emails = reason?.trim()
+        ? [...o.emails, { dir: "in", from: meCust?.email || "kunde", datum: stamp, betreff: "Angebot abgelehnt", body: reason.trim() }]
+        : o.emails;
+      return { ...o, angebot: { ...o.angebot, status: "abgelehnt" }, emails };
     }) }));
   }
   function setTaskStatus(orderId, posId, taskId, val) {
@@ -125,7 +137,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, rvUsed, vTasks, lastIn, latestIncoming, handlungsbedarf,
-    sendGen, sendPosMsg, acceptPosition, setTaskStatus, addPositionTask, setIPStatus, setStage, createAnfrage,
+    sendGen, sendPosMsg, acceptOffer, rejectOffer, setTaskStatus, addPositionTask, setIPStatus, setStage, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

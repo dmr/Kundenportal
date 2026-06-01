@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useStore } from "../store.jsx";
 import { STATI } from "../data/portal.js";
-import { Status, AccChip } from "./ui.jsx";
+import { Status } from "./ui.jsx";
 
 /* Positions-Detail als Modal/Bottom-Sheet: Beschreibung, Teilaufgaben (rollenabhängig
    sichtbar/bearbeitbar), Rückfragen-Thread und – für Kunden – "Position annehmen". */
 export default function PositionSheet({ ord, pos, onClose }) {
-  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendPosMsg, acceptPosition } = useStore();
+  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendPosMsg } = useStore();
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState(false);
   const [taskForm, setTaskForm] = useState(null);
@@ -27,10 +27,8 @@ export default function PositionSheet({ ord, pos, onClose }) {
       <div className="sheet wide" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-top"><strong>{pos.titel}</strong><button className="x" onClick={onClose}>×</button></div>
         <div className="sheet-body">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 14 }}>
-            <span className="pbetrag" style={{ fontSize: 18 }}>{pos.betrag}</span><AccChip p={pos} />
-          </div>
           <div className="muted" style={{ fontSize: 13.5, lineHeight: 1.55 }}>{pos.beschreibung}</div>
+          <div className="pbetrag" style={{ marginTop: 10 }}>Position: {pos.betrag}</div>
 
           <div className="subh">Teilaufgaben</div>
           {vTasks(pos).length === 0 && <div className="muted small">Keine Teilaufgaben.</div>}
@@ -76,7 +74,6 @@ export default function PositionSheet({ ord, pos, onClose }) {
             <div className="actions">
               <button className="btn sm" onClick={send}>{isIntern ? "Antwort senden" : "Rückfrage senden"}</button>
               {sent && <span className="sent">✓ gesendet</span>}
-              {!isIntern && !pos.angenommen && <button className="btn" onClick={() => acceptPosition(ord.id, pos.id)}>Position annehmen</button>}
             </div>
           </div>
         </div>

@@ -2,10 +2,29 @@ import { useNavigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { STAGES, stageIdx, fmtH } from "../data/portal.js";
 
+function OrderRow({ o, onClick, done }) {
+  const ci = stageIdx(o.stage);
+  return (
+    <div className="row" onClick={onClick}>
+      <span className={"tlwtag" + (o.tlw ? "" : " none")}>{o.tlw || "Anfrage"}</span>
+      <div className="grow">
+        <div className="name">{o.titel}</div>
+        {/* Status/Inhalt führt — Klartext statt Code, kein Preis. */}
+        <div className="meta">{STAGES[ci].kunde}</div>
+      </div>
+      <span className="chip" style={{ background: done ? "#DCE7DC" : "var(--accent-soft)", color: done ? "#3F6B3F" : "var(--accent)" }}>
+        {done ? "Abgeschlossen" : "Schritt " + (ci + 1) + "/6"}
+      </span>
+    </div>
+  );
+}
+
 export default function KundeHome() {
   const { meCust, rvUsed, ordersOf } = useStore();
   const nav = useNavigate();
   const orders = meCust ? ordersOf(meCust.id) : [];
+  const aktiv = orders.filter((o) => o.stage !== "abgeschlossen");
+  const fertig = orders.filter((o) => o.stage === "abgeschlossen");
 
   return (
     <>
@@ -27,23 +46,20 @@ export default function KundeHome() {
         );
       })()}
 
+      <div className="sec" style={{ marginTop: 4 }}>Aktive Aufträge</div>
       <div className="card">
-        {orders.map((o) => {
-          const ci = stageIdx(o.stage);
-          return (
-            <div className="row" key={o.id} onClick={() => nav("/auftrag/" + o.id)}>
-              <span className={"tlwtag" + (o.tlw ? "" : " none")}>{o.tlw || "Anfrage"}</span>
-              <div className="grow">
-                <div className="name">{o.titel}</div>
-                <div className="meta">{o.typ}{o.auftragsNr ? " · Auftrag " + o.auftragsNr : " · noch kein Auftrag"}</div>
-              </div>
-              <span className="chip" style={{ background: o.stage === "abgeschlossen" ? "#DCE7DC" : "var(--accent-soft)", color: o.stage === "abgeschlossen" ? "#3F6B3F" : "var(--accent)" }}>
-                Schritt {ci + 1}/6 · {STAGES[ci].label}
-              </span>
-            </div>
-          );
-        })}
+        {aktiv.length === 0 && <div className="empty">Aktuell keine aktiven Aufträge.</div>}
+        {aktiv.map((o) => <OrderRow key={o.id} o={o} onClick={() => nav("/auftrag/" + o.id)} />)}
       </div>
+
+      {fertig.length > 0 && (
+        <>
+          <div className="sec">Abgeschlossen</div>
+          <div className="card done-group">
+            {fertig.map((o) => <OrderRow key={o.id} o={o} done onClick={() => nav("/auftrag/" + o.id)} />)}
+          </div>
+        </>
+      )}
     </>
   );
 }
