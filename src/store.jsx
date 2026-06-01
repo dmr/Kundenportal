@@ -1,15 +1,38 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { SEED, ME, today } from "./data/portal.js";
 
-/* Zentraler In-Memory-Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise
-   (persp) sowie alle Mutationen. Reload = Reset. Produktion: gegen API tauschen. */
+/* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
+   sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
+   Produktion: gegen echte API tauschen. */
 
 const StoreContext = createContext(null);
+const STORAGE_KEY = "kundenportal:v1";
+
+function loadPersisted() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function StoreProvider({ children }) {
-  const [db, setDb] = useState(SEED);
+  const [db, setDb] = useState(() => loadPersisted()?.db ?? SEED);
   // persp: null | { mode: "intern" } | { mode: "kunde", customerId }
-  const [persp, setPersp] = useState(null);
+  const [persp, setPersp] = useState(() => loadPersisted()?.persp ?? null);
+
+  // Bei jeder Änderung sichern. Reload stellt Daten und Sichtweise wieder her.
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ db, persp })); } catch { /* ignore */ }
+  }, [db, persp]);
+
+  // Demodaten zurücksetzen (Klick-Demo: Seed wiederherstellen, Sicht verlassen).
+  function resetDemo() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    setDb(SEED);
+    setPersp(null);
+  }
   // App-weiter Zustand für den "Neue Anfrage"-Dialog (Kunde).
   const [newAnfrage, setNewAnfrage] = useState(null);
 
@@ -100,7 +123,7 @@ export function StoreProvider({ children }) {
   }
 
   const value = {
-    db, persp, setPersp, isIntern, meCust, newAnfrage, setNewAnfrage,
+    db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, rvUsed, vTasks, lastIn, latestIncoming, handlungsbedarf,
     sendGen, sendPosMsg, acceptPosition, setTaskStatus, addPositionTask, setIPStatus, setStage, createAnfrage,
   };

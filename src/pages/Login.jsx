@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 
 export default function Login() {
-  const { db, setPersp } = useStore();
+  const { db, setPersp, resetDemo } = useStore();
   const nav = useNavigate();
 
   const pickIntern = () => { setPersp({ mode: "intern" }); nav("/intern"); };
@@ -27,6 +27,7 @@ export default function Login() {
             </button>
           ))}
         </div>
+        <button className="btn ghost sm" style={{ marginTop: 28 }} onClick={resetDemo}>↺ Demodaten zurücksetzen</button>
       </div>
     </div>
   );
