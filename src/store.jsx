@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 7;
+const STORAGE_VERSION = 8;
 
 function loadPersisted() {
   try {
@@ -54,6 +54,7 @@ export function StoreProvider({ children }) {
   const orderById = (id) => db.orders.find((o) => o.id === id);
   const geraeteOf = (id) => db.geraete.filter((g) => g.customerId === id);
   const geraetById = (id) => db.geraete.find((g) => g.id === id);
+  const ordersForGeraet = (gid) => db.orders.filter((o) => o.geraetId === gid);
   // Sichtbare Teilaufgaben je nach Rolle (Kunde sieht nur sicht="kunde").
   const vTasks = (p) => (isIntern ? p.teilaufgaben : p.teilaufgaben.filter((t) => t.sicht === "kunde"));
 
@@ -145,7 +146,7 @@ export function StoreProvider({ children }) {
 
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
-    ordersOf, custOf, orderById, geraeteOf, geraetById, vTasks, lastIn, latestIncoming, handlungsbedarf,
+    ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, lastIn, latestIncoming, handlungsbedarf,
     sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

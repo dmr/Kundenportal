@@ -113,7 +113,7 @@ export const SEED = {
   orders: [
     {
       id: "o1", customerId: "c1", titel: "Auslieferung TLW 763", tlw: "TLW 763", auftragsNr: "5069", typ: "Auslieferung",
-      stage: "lieferung", datum: "2026-05-08",
+      geraetId: "g1", stage: "lieferung", datum: "2026-05-08",
       angebot: { nr: "AN-2026-0412", datum: "2026-05-10", status: "angenommen", positionen: [
         { id: "p1", titel: "Transport TLW 763 zum Zielort", betrag: "3.200,00 €", angenommen: true,
           beschreibung: "Abholung im Werk Augsburg, Lieferung zum Kundenstandort inkl. Ladungssicherung, Begleitfahrzeug und Entladung vor Ort durch geschultes Personal.",
@@ -175,7 +175,7 @@ export const SEED = {
     },
     {
       id: "o5", customerId: "c1", titel: "Jahreswartung TLW 763", tlw: "TLW 763", auftragsNr: "5044", typ: "Service",
-      stage: "abgeschlossen", datum: "2026-03-03",
+      geraetId: "g1", stage: "abgeschlossen", datum: "2026-03-03",
       angebot: { nr: "AN-2026-0299", datum: "2026-03-03", status: "angenommen", positionen: [
         { id: "p1", titel: "Jahreswartung & Sicherheitsprüfung", betrag: "1.180,00 €", angenommen: true,
           beschreibung: "Komplette Jahreswartung nach Herstellervorgabe inkl. Sicherheitsprüfung und Prüfprotokoll.",
@@ -189,8 +189,8 @@ export const SEED = {
       emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-03-15 08:30", betreff: "Wartung erledigt", body: "Alles bestens, danke für die schnelle Abwicklung." } ],
     },
     {
-      id: "o6", customerId: "c1", titel: "Auslieferung Anbauteile", tlw: "TLW 763", auftragsNr: "5018", typ: "Auslieferung",
-      stage: "abgeschlossen", datum: "2026-02-09",
+      id: "o6", customerId: "c1", titel: "Anbauteile TLW 763", tlw: "TLW 763", auftragsNr: "5018", typ: "Service",
+      geraetId: "g1", stage: "abgeschlossen", datum: "2026-02-09",
       angebot: { nr: "AN-2026-0188", datum: "2026-02-09", status: "angenommen", positionen: [
         { id: "p1", titel: "Lieferung & Montage Anbauteile", betrag: "2.460,00 €", angenommen: true,
           beschreibung: "Lieferung der Anbauteile inkl. Montage und Funktionsprüfung vor Ort.",
