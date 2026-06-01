@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   suggestStage, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus,
-  addMonths, calibNextDue, calibStatus,
+  addMonths, calibNextDue, calibStatus, applyHistorieEntry,
 } from "./portal.js";
 
 // Minimal-Fixtures für die Angebots-/Fortschrittslogik.
@@ -103,5 +103,15 @@ describe("Kalibrierung", () => {
     expect(calibStatus(geraet({ letzteKalibrierung: "2025-03-20" }), HEUTE)).toBe("überfällig"); // fällig 2026-03-20
     expect(calibStatus(geraet({ letzteKalibrierung: "2025-07-10" }), HEUTE)).toBe("fällig bald"); // fällig 2026-07-10 (39 Tage)
     expect(calibStatus(geraet({ letzteKalibrierung: null, ausgeliefert: "2026-01-20", kalibrierIntervallMonate: 24 }), HEUTE)).toBe("kalibriert");
+  });
+
+  it("applyHistorieEntry: Kalibrierung schreibt letzteKalibrierung fort, Software die Version", () => {
+    const g = { letzteKalibrierung: "2025-03-20", softwareVersion: "5.28.2", historie: [] };
+    const k = applyHistorieEntry(g, { datum: "2026-06-01", art: "kalibrierung", ergebnis: "in Toleranz", zertifikat: "KAL-X" });
+    expect(k.letzteKalibrierung).toBe("2026-06-01");
+    expect(k.historie[0].art).toBe("kalibrierung");
+    const s = applyHistorieEntry(g, { datum: "2026-06-01", art: "software", version: "5.29.1" });
+    expect(s.softwareVersion).toBe("5.29.1");
+    expect(s.historie[0].version).toBe("5.29.1");
   });
 });

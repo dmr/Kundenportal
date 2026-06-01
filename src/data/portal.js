@@ -75,6 +75,25 @@ export function calibStatus(g, todayStr) {
   return "kalibriert";
 }
 
+// Labels für die Service-Historie (Scheckheft-Gefühl).
+export const HISTORIE_ART = {
+  auslieferung: { label: "Auslieferung", icon: "📦" },
+  kalibrierung: { label: "Kalibrierung", icon: "🔧" },
+  software: { label: "Software-Update", icon: "⬆️" },
+  reparatur: { label: "Reparatur", icon: "🛠️" },
+  wartung: { label: "Wartung", icon: "🧰" },
+};
+
+/* Pure: einen Eintrag in die Geräte-Historie aufnehmen und abhängige Felder
+   fortschreiben (letzte Kalibrierung bzw. aktuelle Softwareversion). */
+export function applyHistorieEntry(g, entry) {
+  const historie = [entry, ...g.historie];
+  const patch = {};
+  if (entry.art === "kalibrierung") patch.letzteKalibrierung = entry.datum;
+  if (entry.art === "software") patch.softwareVersion = entry.version;
+  return { ...g, ...patch, historie };
+}
+
 export const STATUS_STYLE = {
   "offen": { bg: "#F3E7CE", fg: "#8A5A00" }, "angenommen": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "abgelehnt": { bg: "#F1D9D1", fg: "#A23C1E" }, "in Klärung": { bg: "#DEE6F2", fg: "#1D4E89" },
@@ -193,16 +212,17 @@ export const SEED = {
       emails: [],
     },
     {
-      id: "o7", customerId: "c2", titel: "Service Hebebühne", tlw: "TLW 410", auftragsNr: "4998", typ: "Service",
-      stage: "abgeschlossen", datum: "2026-02-24",
-      angebot: { nr: "AN-2026-0240", datum: "2026-02-24", status: "angenommen", positionen: [
-        { id: "p1", titel: "Service & Kalibrierung Hebebühne", betrag: "880,00 €", angenommen: true,
-          beschreibung: "Service der Hebebühne inkl. Kalibrierung und Sicherheitsabnahme.",
+      id: "o7", customerId: "c2", titel: "Kalibrierung Nivelliergerät NL-7", tlw: null, auftragsNr: "4998", typ: "Kalibrierung",
+      geraetId: "g4", stage: "abgeschlossen", datum: "2025-02-05",
+      angebot: { nr: "AN-2025-0240", datum: "2025-02-05", status: "angenommen", positionen: [
+        { id: "p1", titel: "Kalibrierung & Justage Nivelliergerät", betrag: "420,00 €", angenommen: true,
+          beschreibung: "Kalibrierung des Nivelliergeräts nach Herstellervorgabe inkl. Justage und Ausstellung des Kalibrierzertifikats.",
           teilaufgaben: [
-            { id: "a1", titel: "Service & Kalibrierung", status: "erledigt", sicht: "kunde", verantwortlich: "Technik", faellig: "2026-03-04" } ],
+            { id: "a1", titel: "Kalibrierung durchführen", status: "erledigt", sicht: "kunde", verantwortlich: "Kalibrierlabor", faellig: "2025-02-15" },
+            { id: "a2", titel: "Zertifikat ausstellen", status: "erledigt", sicht: "kunde", verantwortlich: "Kalibrierlabor", faellig: "2025-02-16" } ],
           rueckfragen: [] } ] },
-      bestellung: { nr: "BE-76310", datum: "2026-02-26", status: "abgeschlossen" },
-      lieferschein: { nr: "LS-89505", datum: "2026-03-04", status: "zugestellt" },
+      bestellung: { nr: "BE-75810", datum: "2025-02-07", status: "abgeschlossen" },
+      lieferschein: { nr: "LS-88905", datum: "2025-02-16", status: "zugestellt" },
       internePlanung: [],
       emails: [],
     },
@@ -215,15 +235,32 @@ export const SEED = {
   ],
   geraete: [
     { id: "g1", customerId: "c1", bezeichnung: "Drehmomentschlüssel DS-200", hersteller: "Stahlwille", typ: "Drehmomentschlüssel", seriennummer: "DS200-4471",
-      ausgeliefert: "2024-03-15", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-03-20",
-      zertifikate: [ { nr: "KAL-2025-1182", datum: "2025-03-20", ergebnis: "in Toleranz", gueltigBis: "2026-03-20" } ] },
+      ausgeliefert: "2024-03-15", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-03-20", softwareVersion: "5.29.1",
+      historie: [
+        { datum: "2025-03-20", art: "software", titel: "Software-Update", version: "5.29.1", hinweis: "Messwertspeicher erweitert" },
+        { datum: "2025-03-20", art: "kalibrierung", titel: "Jahreskalibrierung", ergebnis: "in Toleranz", zertifikat: "KAL-2025-1182" },
+        { datum: "2024-09-10", art: "software", titel: "Software-Update", version: "5.28.2", hinweis: "Fehlerbehebung Bluetooth" },
+        { datum: "2024-03-15", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.27.4" },
+      ] },
     { id: "g2", customerId: "c1", bezeichnung: "Druckmessgerät PM-50", hersteller: "WIKA", typ: "Manometer", seriennummer: "PM50-1192",
-      ausgeliefert: "2025-07-01", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-07-10",
-      zertifikate: [ { nr: "KAL-2025-1450", datum: "2025-07-10", ergebnis: "in Toleranz", gueltigBis: "2026-07-10" } ] },
+      ausgeliefert: "2025-07-01", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-07-10", softwareVersion: "5.29.1",
+      historie: [
+        { datum: "2026-01-15", art: "software", titel: "Software-Update", version: "5.29.1", hinweis: "Sicherheitsupdate" },
+        { datum: "2025-07-10", art: "kalibrierung", titel: "Erstkalibrierung", ergebnis: "in Toleranz", zertifikat: "KAL-2025-1450" },
+        { datum: "2025-07-01", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.28.2" },
+      ] },
     { id: "g3", customerId: "c1", bezeichnung: "Multimeter MX-12", hersteller: "Fluke", typ: "Multimeter", seriennummer: "MX12-8830",
-      ausgeliefert: "2026-01-20", kalibrierIntervallMonate: 24, letzteKalibrierung: null, zertifikate: [] },
+      ausgeliefert: "2026-01-20", kalibrierIntervallMonate: 24, letzteKalibrierung: null, softwareVersion: "5.29.0",
+      historie: [
+        { datum: "2026-01-20", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.29.0" },
+      ] },
     { id: "g4", customerId: "c2", bezeichnung: "Nivelliergerät NL-7", hersteller: "Leica", typ: "Nivelliergerät", seriennummer: "NL7-3320",
-      ausgeliefert: "2025-02-10", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-02-15",
-      zertifikate: [ { nr: "KAL-2025-0210", datum: "2025-02-15", ergebnis: "in Toleranz", gueltigBis: "2026-02-15" } ] },
+      ausgeliefert: "2025-02-10", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-02-15", softwareVersion: "5.28.2",
+      historie: [
+        { datum: "2025-11-20", art: "software", titel: "Software-Update", version: "5.28.2", hinweis: "Genauigkeit Neigungssensor verbessert" },
+        { datum: "2025-08-05", art: "reparatur", titel: "Reparatur", beschreibung: "Display getauscht, Libelle neu justiert." },
+        { datum: "2025-02-15", art: "kalibrierung", titel: "Erstkalibrierung", ergebnis: "in Toleranz", zertifikat: "KAL-2025-0210" },
+        { datum: "2025-02-10", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.27.4" },
+      ] },
   ],
 };

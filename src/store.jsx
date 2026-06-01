@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { SEED, ME, today, addMonths, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus } from "./data/portal.js";
+import { SEED, ME, today, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus, applyHistorieEntry } from "./data/portal.js";
 
 /* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
    sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
 
 function loadPersisted() {
   try {
@@ -119,14 +119,16 @@ export function StoreProvider({ children }) {
     mut(orderId, (o) => ({ ...o, internePlanung: o.internePlanung.map((t) => (t.id === id ? { ...t, status: val } : t)) }));
   }
   function setStage(orderId, key) { mut(orderId, (o) => ({ ...o, stage: key })); }
-  // Kalibrierung erfassen: neues Zertifikat anlegen, letzte Kalibrierung & Fälligkeit fortschreiben.
+  // Kalibrierung erfassen: Historieneintrag (Scheckheft) + Fälligkeit fortschreiben.
   function addCalibration(geraetId, { datum, ergebnis }) {
-    setDb((d) => ({ ...d, geraete: d.geraete.map((g) => {
-      if (g.id !== geraetId) return g;
-      const nr = "KAL-" + datum.slice(0, 4) + "-" + String(Date.now()).slice(-4);
-      const gueltigBis = addMonths(datum, g.kalibrierIntervallMonate);
-      return { ...g, letzteKalibrierung: datum, zertifikate: [{ nr, datum, ergebnis, gueltigBis }, ...g.zertifikate] };
-    }) }));
+    const zertifikat = "KAL-" + datum.slice(0, 4) + "-" + String(Date.now()).slice(-4);
+    const entry = { datum, art: "kalibrierung", titel: "Kalibrierung", ergebnis, zertifikat };
+    setDb((d) => ({ ...d, geraete: d.geraete.map((g) => (g.id === geraetId ? applyHistorieEntry(g, entry) : g)) }));
+  }
+  // Software-Update erfassen: explizite Version in die Historie, aktuelle Version setzen.
+  function addSoftwareUpdate(geraetId, { datum, version, hinweis }) {
+    const entry = { datum, art: "software", titel: "Software-Update", version, hinweis };
+    setDb((d) => ({ ...d, geraete: d.geraete.map((g) => (g.id === geraetId ? applyHistorieEntry(g, entry) : g)) }));
   }
   // Legt eine neue Anfrage an und gibt deren id zurück (für Navigation).
   function createAnfrage(f) {
@@ -144,7 +146,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, geraeteOf, geraetById, rvUsed, vTasks, lastIn, latestIncoming, handlungsbedarf,
-    sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, createAnfrage,
+    sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
