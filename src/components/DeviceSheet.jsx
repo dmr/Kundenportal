@@ -40,6 +40,7 @@ export default function DeviceSheet({ geraet: g, onClose }) {
       <div className="sheet wide" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-top"><strong>{g.bezeichnung}</strong><button className="x" onClick={onClose}>×</button></div>
         <div className="sheet-body">
+          {g.bild && <img className="devimg" src={import.meta.env.BASE_URL + g.bild} alt={g.bezeichnung} loading="lazy" />}
           <div className="muted small">{g.hersteller} · {g.typ} · SN <span className="mono">{g.seriennummer}</span></div>
 
           <div className="devgrid">

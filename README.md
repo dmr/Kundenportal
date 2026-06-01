@@ -13,7 +13,7 @@ nehmen Positionen an und stellen Rückfragen.
 
 ```bash
 npm install
-npm run dev      # lokaler Dev-Server (http://localhost:5173)
+npm run dev      # lokaler Dev-Server (http://localhost:5173/Kundenportal/)
 npm test         # Unit-Tests (Vitest) der Kernlogik
 npm run build    # Production-Build nach dist/
 npm run preview  # Build lokal ansehen
@@ -27,7 +27,7 @@ Source: GitHub Actions**.
 
 Die App liegt dann unter `https://<user>.github.io/Kundenportal/`.
 
-- **Base-Path** `/Kundenportal/` ist in `vite.config.js` gesetzt (Repo-Name). Bei Umbenennung anpassen.
+- **Base-Path** `/Kundenportal/` ist in `vite.config.js` einheitlich für dev/build/preview gesetzt (Repo-Name). Bei Umbenennung anpassen. Statische Assets unter `public/` (z. B. `public/products/*.jpg`) via `import.meta.env.BASE_URL` referenzieren.
 - **HashRouter** (`#/…`) macht Deep-Links ohne Server-Rewrite robust — passend für GitHub Pages.
 
 ## Aufbau

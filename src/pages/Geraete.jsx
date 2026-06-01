@@ -27,6 +27,7 @@ export default function Geraete() {
           const st = calibStatus(g, td);
           return (
             <div className="row" key={g.id} {...clickable(() => setOpenId(g.id))}>
+              {g.bild && <img className="thumb" src={import.meta.env.BASE_URL + g.bild} alt="" loading="lazy" />}
               <div className="grow">
                 <div className="name">{g.bezeichnung}</div>
                 <div className="meta">{g.hersteller} · SN {g.seriennummer} · nächste Kalibrierung {calibNextDue(g)}</div>

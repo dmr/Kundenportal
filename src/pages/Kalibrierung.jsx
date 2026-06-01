@@ -36,6 +36,7 @@ export default function Kalibrierung() {
             <div className="card">
               {items.map(({ g, st, due }) => (
                 <div className="row" key={g.id} {...clickable(() => setOpenId(g.id))}>
+                  {g.bild && <img className="thumb" src={import.meta.env.BASE_URL + g.bild} alt="" loading="lazy" />}
                   <div className="grow">
                     <div className="name">{g.bezeichnung} <span className="typ">· {g.seriennummer}</span></div>
                     <div className="meta">{custOf(g.customerId)?.name} · fällig {due}</div>

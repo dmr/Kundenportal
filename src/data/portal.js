@@ -212,11 +212,11 @@ export const SEED = {
       emails: [],
     },
     {
-      id: "o7", customerId: "c2", titel: "Kalibrierung Nivelliergerät NL-7", tlw: null, auftragsNr: "4998", typ: "Kalibrierung",
+      id: "o7", customerId: "c2", titel: "Kalibrierung TLW 813", tlw: "TLW 813", auftragsNr: "4998", typ: "Kalibrierung",
       geraetId: "g4", stage: "abgeschlossen", datum: "2025-02-05",
       angebot: { nr: "AN-2025-0240", datum: "2025-02-05", status: "angenommen", positionen: [
-        { id: "p1", titel: "Kalibrierung & Justage Nivelliergerät", betrag: "420,00 €", angenommen: true,
-          beschreibung: "Kalibrierung des Nivelliergeräts nach Herstellervorgabe inkl. Justage und Ausstellung des Kalibrierzertifikats.",
+        { id: "p1", titel: "Kalibrierung & Justage TLW 813", betrag: "420,00 €", angenommen: true,
+          beschreibung: "Kalibrierung des Lastwechsel-Testsystems nach Herstellervorgabe inkl. Justage und Ausstellung des Kalibrierzertifikats.",
           teilaufgaben: [
             { id: "a1", titel: "Kalibrierung durchführen", status: "erledigt", sicht: "kunde", verantwortlich: "Kalibrierlabor", faellig: "2025-02-15" },
             { id: "a2", titel: "Zertifikat ausstellen", status: "erledigt", sicht: "kunde", verantwortlich: "Kalibrierlabor", faellig: "2025-02-16" } ],
@@ -227,14 +227,14 @@ export const SEED = {
       emails: [],
     },
     {
-      id: "o8", customerId: "c1", titel: "Kalibrierung Drehmomentschlüssel DS-200", tlw: null, auftragsNr: null, typ: "Kalibrierung",
+      id: "o8", customerId: "c1", titel: "Kalibrierung TLW 763", tlw: "TLW 763", auftragsNr: null, typ: "Kalibrierung",
       geraetId: "g1", stage: "anfrage", datum: "2026-05-28",
       angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
-      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-28 09:40", betreff: "Kalibrierung fällig DS-200", body: "Unser Drehmomentschlüssel DS-200 ist überfällig — bitte Kalibrierung einplanen." } ],
+      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-28 09:40", betreff: "Kalibrierung fällig TLW 763", body: "Unser Lastwechsel-Testsystem TLW 763 ist überfällig — bitte Kalibrierung einplanen." } ],
     },
   ],
   geraete: [
-    { id: "g1", customerId: "c1", bezeichnung: "Drehmomentschlüssel DS-200", hersteller: "Stahlwille", typ: "Drehmomentschlüssel", seriennummer: "DS200-4471",
+    { id: "g1", customerId: "c1", bezeichnung: "TLW 763", hersteller: "Schuster Elektronik", typ: "Lastwechsel-Testsystem für Halbleitermodule", seriennummer: "TLW763-2207", bild: "products/tlw763.jpg",
       ausgeliefert: "2024-03-15", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-03-20", softwareVersion: "5.29.1",
       historie: [
         { datum: "2025-03-20", art: "software", titel: "Software-Update", version: "5.29.1", hinweis: "Messwertspeicher erweitert" },
@@ -242,19 +242,19 @@ export const SEED = {
         { datum: "2024-09-10", art: "software", titel: "Software-Update", version: "5.28.2", hinweis: "Fehlerbehebung Bluetooth" },
         { datum: "2024-03-15", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.27.4" },
       ] },
-    { id: "g2", customerId: "c1", bezeichnung: "Druckmessgerät PM-50", hersteller: "WIKA", typ: "Manometer", seriennummer: "PM50-1192",
+    { id: "g2", customerId: "c1", bezeichnung: "TLW 800", hersteller: "Schuster Elektronik", typ: "Lastwechsel-Testsystem für Halbleitermodule", seriennummer: "TLW800-2419", bild: "products/tlw800.jpg",
       ausgeliefert: "2025-07-01", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-07-10", softwareVersion: "5.29.1",
       historie: [
         { datum: "2026-01-15", art: "software", titel: "Software-Update", version: "5.29.1", hinweis: "Sicherheitsupdate" },
         { datum: "2025-07-10", art: "kalibrierung", titel: "Erstkalibrierung", ergebnis: "in Toleranz", zertifikat: "KAL-2025-1450" },
         { datum: "2025-07-01", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.28.2" },
       ] },
-    { id: "g3", customerId: "c1", bezeichnung: "Multimeter MX-12", hersteller: "Fluke", typ: "Multimeter", seriennummer: "MX12-8830",
+    { id: "g3", customerId: "c1", bezeichnung: "TLW 739", hersteller: "Schuster Elektronik", typ: "Lastwechsel-Testsystem für Halbleitermodule", seriennummer: "TLW739-1933", bild: "products/tlw739.jpg",
       ausgeliefert: "2026-01-20", kalibrierIntervallMonate: 24, letzteKalibrierung: null, softwareVersion: "5.29.0",
       historie: [
         { datum: "2026-01-20", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.29.0" },
       ] },
-    { id: "g4", customerId: "c2", bezeichnung: "Nivelliergerät NL-7", hersteller: "Leica", typ: "Nivelliergerät", seriennummer: "NL7-3320",
+    { id: "g4", customerId: "c2", bezeichnung: "TLW 813", hersteller: "Schuster Elektronik", typ: "Lastwechsel-Testsystem für Halbleiter", seriennummer: "TLW813-3120", bild: "products/tlw813.jpg",
       ausgeliefert: "2025-02-10", kalibrierIntervallMonate: 12, letzteKalibrierung: "2025-02-15", softwareVersion: "5.28.2",
       historie: [
         { datum: "2025-11-20", art: "software", titel: "Software-Update", version: "5.28.2", hinweis: "Genauigkeit Neigungssensor verbessert" },

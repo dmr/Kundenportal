@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 5;
+const STORAGE_VERSION = 6;
 
 function loadPersisted() {
   try {
