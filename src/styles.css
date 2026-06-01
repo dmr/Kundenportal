@@ -3,7 +3,8 @@
 :root{--paper:#F4EFE6;--panel:#FBF8F2;--ink:#211C14;--muted:#7A6F5C;--line:#E2D9C8;--accent:#B5460F;--accent-soft:#F0E2D6;--intern:#1D4E89;}
 .tlw-root{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);background:var(--paper);min-height:100vh;line-height:1.45;background-image:radial-gradient(rgba(0,0,0,.018) 1px,transparent 1px);background-size:4px 4px;}
 .mono{font-family:'IBM Plex Mono',monospace;} .serif{font-family:'Fraunces',Georgia,serif;} .muted{color:var(--muted);} .small{font-size:13px;}
-.pbetrag{font-family:'IBM Plex Mono';font-size:13px;color:var(--muted);font-weight:400;white-space:nowrap;}
+/* Preise grundsätzlich sehr dezent und klein – Status/Inhalt dominiert. */
+.pbetrag{font-family:'IBM Plex Mono';font-size:11.5px;color:var(--muted);font-weight:400;white-space:nowrap;}
 .login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;}
 .login .mark{font-family:'Fraunces';font-weight:800;font-size:30px;letter-spacing:-.02em;} .login .sub{color:var(--muted);font-size:13px;letter-spacing:.1em;text-transform:uppercase;margin:6px 0 32px;}
 .login .grp{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:720px;}
@@ -59,17 +60,15 @@
 .dual{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 22px;}
 .sumcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
 .sumcard .sumnr{font-size:15px;font-weight:600;margin:8px 0 8px;} .sumcard .summeta{font-size:12.5px;color:var(--muted);margin-bottom:10px;} .sumcard .accprog{font-size:12.5px;color:var(--muted);margin-top:12px;} .sumcard .big{font-family:'Fraunces';font-weight:700;font-size:22px;margin:2px 0 8px;}
-/* Betrag im Angebots-Card bewusst dezent (kein Blickfang vor der Freigabe). */
-.sumcard .sumtotal{font-family:'IBM Plex Mono';font-size:13.5px;color:var(--muted);margin:10px 0 0;}
-/* Freigabe-Box: einziger Ort, an dem der Gesamtbetrag prominent zur Entscheidung steht. */
+/* Betrag im Angebots-Card bewusst sehr klein (kein Blickfang). */
+.sumcard .sumtotal{font-family:'IBM Plex Mono';font-size:11.5px;color:var(--muted);margin:10px 0 0;}
+/* Freigabe-Box: Aktionen + Mehrwert stehen im Fokus, der Preis nur klein dabei. */
 .offerbox{background:#FCF6F0;border:1px solid var(--accent-soft);border-left:4px solid var(--accent);border-radius:12px;padding:18px 20px;margin-bottom:22px;}
-.offerbox .total{font-family:'Fraunces';font-weight:800;font-size:32px;letter-spacing:-.02em;color:var(--ink);line-height:1;}
-.offerbox .offer-actions{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px;}
+.offerbox .offer-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 8px;}
 .offerbox .reasonbox{width:100%;min-height:64px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:14px;background:#fff;resize:vertical;margin:6px 0 10px;}
 .offerbox .reasonbox:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
 .confirmbox{border-radius:12px;padding:14px 18px;margin-bottom:22px;font-size:14px;}
 .confirmbox.ok{background:#DCE7DC;border:1px solid #Bcd3Bc;color:#2F5A2F;}
-.confirmbox.no{background:#F1D9D1;border:1px solid #E3BCAE;color:#8A3A1E;}
 .confirmbox.clarify{background:#DEE6F2;border:1px solid #BCD0E6;color:#1D4E89;}
 /* Sichtbarer Fokus für tastaturbediente Listenzeilen/Karten. */
 .row:focus-visible,.act:focus-visible,.pick:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}

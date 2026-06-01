@@ -19,7 +19,6 @@ export const stageIdx = (k) => STAGES.findIndex((s) => s.key === k);
 export function suggestStage(o) {
   if (!o.angebot) return "anfrage";
   const positionen = o.angebot.positionen || [];
-  if (o.angebot.status === "abgelehnt") return "angebot";
   const allAccepted = positionen.length > 0 && positionen.every((p) => p.angenommen);
   if (!allAccepted) return "angebot";
   if (!o.bestellung) return "auftrag";
@@ -35,14 +34,7 @@ export function applyAcceptOffer(o) {
   const positionen = o.angebot.positionen.map((p) => ({ ...p, angenommen: true }));
   return { ...o, angebot: { ...o.angebot, status: "angenommen", positionen }, stage: o.stage === "angebot" ? "auftrag" : o.stage };
 }
-export function applyRejectOffer(o, reason, from, stamp) {
-  if (!o.angebot) return o;
-  const emails = reason?.trim()
-    ? [...o.emails, { dir: "in", from, datum: stamp, betreff: "Angebot abgelehnt", body: reason.trim() }]
-    : o.emails;
-  return { ...o, angebot: { ...o.angebot, status: "abgelehnt" }, emails };
-}
-// Angebot wieder freigeben/erneut stellen (z. B. nach Ablehnung) oder in Klärung setzen.
+// Angebotsstatus setzen ("offen" / "in Klärung").
 export function applyOfferStatus(o, status) {
   if (!o.angebot) return o;
   return { ...o, angebot: { ...o.angebot, status } };
@@ -93,7 +85,7 @@ export function applyHistorieEntry(g, entry) {
 
 export const STATUS_STYLE = {
   "offen": { bg: "#F3E7CE", fg: "#8A5A00" }, "angenommen": { bg: "#DCE7DC", fg: "#3F6B3F" },
-  "abgelehnt": { bg: "#F1D9D1", fg: "#A23C1E" }, "in Klärung": { bg: "#DEE6F2", fg: "#1D4E89" },
+  "in Klärung": { bg: "#DEE6F2", fg: "#1D4E89" },
   "kalibriert": { bg: "#DCE7DC", fg: "#3F6B3F" }, "fällig bald": { bg: "#F3E7CE", fg: "#8A5A00" }, "überfällig": { bg: "#F1D9D1", fg: "#A23C1E" },
   "in Toleranz": { bg: "#DCE7DC", fg: "#3F6B3F" }, "außerhalb Toleranz": { bg: "#F1D9D1", fg: "#A23C1E" },
   "bestätigt": { bg: "#DCE7DC", fg: "#3F6B3F" }, "abgeschlossen": { bg: "#DCE7DC", fg: "#3F6B3F" },

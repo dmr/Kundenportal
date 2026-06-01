@@ -7,12 +7,12 @@ import PositionSheet from "../components/PositionSheet.jsx";
 
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, rejectOffer, setOfferStatus } = useStore();
+  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState(false);
-  const [rejecting, setRejecting] = useState(false);
-  const [reason, setReason] = useState("");
+  const [querying, setQuerying] = useState(false);
+  const [queryText, setQueryText] = useState("");
 
   const ord = orderById(ordId);
   if (!ord) return <Navigate to={isIntern ? "/intern" : "/kunde"} replace />;
@@ -34,6 +34,13 @@ export default function OrderDetail() {
     if (!draft.trim()) return;
     sendGen(ord.id, draft);
     setDraft(""); setSent(true);
+  };
+  // Rückfrage zum Angebot: Nachricht senden + Angebot in „in Klärung" – kein „Ablehnen".
+  const sendQuery = () => {
+    if (!queryText.trim()) return;
+    sendGen(ord.id, queryText);
+    setOfferStatus(ord.id, "in Klärung");
+    setQuerying(false); setQueryText("");
   };
 
   return (
@@ -84,26 +91,25 @@ export default function OrderDetail() {
       )}
 
       {/* Nächste Aktion: Angebotsfreigabe (nur Kunde, nur wenn offen).
-          Einziger Ort, an dem der Gesamtbetrag prominent zur Entscheidung steht. */}
+          Aktionen + Mehrwert (Leistungen unten) im Fokus, Preis nur klein dabei. */}
       {!isIntern && offer && offer.status === "offen" && (
         <div className="offerbox">
           <div className="subh" style={{ marginTop: 0 }}>Angebot {offer.nr} prüfen</div>
-          <div className="total">{fmtEUR(total)}</div>
-          <div className="muted small" style={{ marginBottom: 14 }}>{offer.positionen.length} Position(en) · vom {offer.datum}</div>
-          {!rejecting ? (
+          <div className="muted small">{offer.positionen.length} Leistung(en) · vom {offer.datum} · Gesamt <span className="pbetrag">{fmtEUR(total)}</span></div>
+          {!querying ? (
             <>
               <div className="offer-actions">
                 <button className="btn" onClick={() => acceptOffer(ord.id)}>Angebot annehmen</button>
-                <button className="btn ghost" onClick={() => setRejecting(true)}>Ablehnen</button>
+                <button className="btn ghost" onClick={() => setQuerying(true)}>Rückfrage stellen</button>
               </div>
-              <div className="note" style={{ fontStyle: "normal" }}>Einzelne Position unklar? Unten öffnen und eine Rückfrage stellen — Annahme gilt fürs ganze Angebot.</div>
+              <div className="note" style={{ fontStyle: "normal" }}>Die einzelnen Leistungen sehen Sie unten. Annahme gilt fürs ganze Angebot.</div>
             </>
           ) : (
             <>
-              <textarea className="reasonbox" placeholder="Grund (optional) – z. B. Budget, Termin, Umfang" value={reason} onChange={(e) => setReason(e.target.value)} />
+              <textarea className="reasonbox" placeholder="Ihre Rückfrage zum Angebot – z. B. Umfang, Termin, einzelne Leistung …" value={queryText} onChange={(e) => setQueryText(e.target.value)} />
               <div className="offer-actions">
-                <button className="btn" onClick={() => { rejectOffer(ord.id, reason); setRejecting(false); setReason(""); }}>Ablehnung senden</button>
-                <button className="btn ghost" onClick={() => setRejecting(false)}>Zurück</button>
+                <button className="btn" onClick={sendQuery}>Rückfrage senden</button>
+                <button className="btn ghost" onClick={() => setQuerying(false)}>Zurück</button>
               </div>
             </>
           )}
@@ -113,10 +119,7 @@ export default function OrderDetail() {
         <div className="confirmbox ok">✓ Angebot angenommen — wir starten die Umsetzung. Den Fortschritt sehen Sie oben.</div>
       )}
       {!isIntern && offer && offer.status === "in Klärung" && (
-        <div className="confirmbox clarify">Wir klären Ihre Rückfrage und stellen Ihnen anschließend ein aktualisiertes Angebot zur Freigabe.</div>
-      )}
-      {!isIntern && offer && offer.status === "abgelehnt" && (
-        <div className="confirmbox no">Angebot abgelehnt. Möchten Sie etwas anpassen? Schreiben Sie uns unten.</div>
+        <div className="confirmbox clarify">Danke für Ihre Rückfrage — wir klären sie und stellen Ihnen anschließend ein aktualisiertes Angebot zur Freigabe.</div>
       )}
 
       {/* Team: Angebots-Status steuern — Ablehnung/Klärung führt zurück zur Freigabe. */}
@@ -126,7 +129,6 @@ export default function OrderDetail() {
           <Status s={offer.status} />
           {offer.status === "offen" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "in Klärung")}>Auf „in Klärung" setzen</button>}
           {offer.status === "in Klärung" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "offen")}>Erneut zur Freigabe stellen</button>}
-          {offer.status === "abgelehnt" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "offen")}>Überarbeitetes Angebot erneut stellen</button>}
           <span className="note" style={{ margin: 0 }}>Steuert, was der Kunde zur Freigabe sieht.</span>
         </div>
       )}

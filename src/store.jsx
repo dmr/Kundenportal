@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { SEED, ME, today, applyAcceptOffer, applyRejectOffer, applyOfferStatus, applyHistorieEntry } from "./data/portal.js";
+import { SEED, ME, today, applyAcceptOffer, applyOfferStatus, applyHistorieEntry } from "./data/portal.js";
 
 /* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
    sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
@@ -101,13 +101,9 @@ export function StoreProvider({ children }) {
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
     mutPos(orderId, posId, (p) => ({ ...p, rueckfragen: [...p.rueckfragen, { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text: t }] }));
   }
-  // Angebotsfreigabe (alles-oder-nichts) über pure Transforms aus portal.js.
+  // Angebotsfreigabe (alles-oder-nichts) über pure Transform aus portal.js.
   function acceptOffer(orderId) { mut(orderId, applyAcceptOffer); }
-  function rejectOffer(orderId, reason) {
-    const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    mut(orderId, (o) => applyRejectOffer(o, reason, meCust?.email || "kunde", stamp));
-  }
-  // Intern: Angebot erneut stellen ("offen") oder als "in Klärung" markieren.
+  // Angebotsstatus setzen ("offen" / "in Klärung").
   function setOfferStatus(orderId, status) { mut(orderId, (o) => applyOfferStatus(o, status)); }
   function setTaskStatus(orderId, posId, taskId, val) {
     mutPos(orderId, posId, (p) => ({ ...p, teilaufgaben: p.teilaufgaben.map((t) => (t.id === taskId ? { ...t, status: val } : t)) }));
@@ -147,7 +143,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, lastIn, latestIncoming, handlungsbedarf,
-    sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
+    sendGen, sendPosMsg, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

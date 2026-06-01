@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  suggestStage, applyAcceptOffer, applyRejectOffer, applyOfferStatus,
+  suggestStage, applyAcceptOffer, applyOfferStatus,
   addMonths, calibNextDue, calibStatus, applyHistorieEntry,
 } from "./portal.js";
 
@@ -17,9 +17,6 @@ describe("suggestStage", () => {
   });
   it("Angebot offen, nicht alle angenommen → angebot", () => {
     expect(suggestStage(order())).toBe("angebot");
-  });
-  it("abgelehntes Angebot → angebot", () => {
-    expect(suggestStage(order({ angebot: { status: "abgelehnt", positionen: [pos({ angenommen: true })] } }))).toBe("angebot");
   });
   it("alle angenommen, keine Bestellung → auftrag", () => {
     expect(suggestStage(order({ angebot: { status: "angenommen", positionen: [pos({ angenommen: true })] } }))).toBe("auftrag");
@@ -54,20 +51,6 @@ describe("applyAcceptOffer", () => {
   it("lässt eine spätere Stage unverändert", () => {
     const o = applyAcceptOffer(order({ stage: "lieferung" }));
     expect(o.stage).toBe("lieferung");
-  });
-});
-
-describe("applyRejectOffer", () => {
-  it("setzt Status abgelehnt und fügt mit Grund eine eingehende Nachricht hinzu", () => {
-    const o = applyRejectOffer(order(), "Zu teuer", "kunde@x.de", "2026-01-02 10:00");
-    expect(o.angebot.status).toBe("abgelehnt");
-    expect(o.emails).toHaveLength(1);
-    expect(o.emails[0]).toMatchObject({ dir: "in", from: "kunde@x.de", body: "Zu teuer" });
-  });
-  it("ohne Grund keine zusätzliche Nachricht", () => {
-    const o = applyRejectOffer(order(), "  ", "kunde@x.de", "2026-01-02 10:00");
-    expect(o.angebot.status).toBe("abgelehnt");
-    expect(o.emails).toHaveLength(0);
   });
 });
 
