@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
+import { clickable } from "../components/ui.jsx";
 
 export default function Inbox() {
   const { handlungsbedarf, latestIncoming } = useStore();
@@ -13,7 +14,7 @@ export default function Inbox() {
       {handlungsbedarf.map(({ k, o }) => {
         const li = latestIncoming(o);
         return (
-          <div className="card" key={o.id} style={{ marginBottom: 14, padding: "16px 20px", cursor: "pointer" }} onClick={() => nav("/auftrag/" + o.id)}>
+          <div className="card" key={o.id} style={{ marginBottom: 14, padding: "16px 20px", cursor: "pointer" }} {...clickable(() => nav("/auftrag/" + o.id))}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted)" }}>
               <span className="mono">{li?.from}</span><span className="mono">{li?.datum}</span>
             </div>

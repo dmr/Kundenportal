@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { STAGES, stageIdx, fmtH } from "../data/portal.js";
+import { clickable } from "../components/ui.jsx";
 
 function OrderRow({ o, onClick, done }) {
   const ci = stageIdx(o.stage);
   return (
-    <div className="row" onClick={onClick}>
+    <div className="row" {...clickable(onClick)}>
       <span className={"tlwtag" + (o.tlw ? "" : " none")}>{o.tlw || "Anfrage"}</span>
       <div className="grow">
         <div className="name">{o.titel}</div>

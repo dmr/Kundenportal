@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { STAGES, stageIdx } from "../data/portal.js";
-import { Status } from "../components/ui.jsx";
+import { Status, clickable } from "../components/ui.jsx";
 
 export default function InternHome() {
   const { db, handlungsbedarf, custOf, latestIncoming } = useStore();
@@ -22,7 +22,7 @@ export default function InternHome() {
       <div className="card">
         {handlungsbedarf.length === 0 && <div className="empty">Alles erledigt.</div>}
         {handlungsbedarf.map(({ k, o }) => (
-          <div className="act" key={o.id} onClick={() => openOrder(o.id)}>
+          <div className="act" key={o.id} {...clickable(() => openOrder(o.id))}>
             <span className="dot" style={{ background: k === "anfrage" ? "#8A5A00" : "var(--accent)" }} />
             <div className="grow">
               <div className="t">{k === "anfrage" ? "Neue Anfrage – noch kein Auftrag" : "Offene Rückfrage"}: {o.titel}</div>
@@ -36,7 +36,7 @@ export default function InternHome() {
       <div className="sec">Aktive Vorgänge</div>
       <div className="card">
         {db.orders.filter((o) => o.stage !== "abgeschlossen").map((o) => (
-          <div className="row" key={o.id} onClick={() => openOrder(o.id)}>
+          <div className="row" key={o.id} {...clickable(() => openOrder(o.id))}>
             <span className={"tlwtag" + (o.tlw ? "" : " none")}>{o.tlw || "Anfrage"}</span>
             <div className="grow">
               <div className="name">{o.titel} {o.auftragsNr && <span className="typ">· {o.auftragsNr}</span>}</div>

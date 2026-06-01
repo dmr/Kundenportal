@@ -29,9 +29,31 @@ export function suggestStage(o) {
   return allTasksDone && delivered ? "abgeschlossen" : "lieferung";
 }
 
+/* Verbleibendes Rahmenvertrags-Budget: budgetStunden − Σ eintraege.stunden. */
+export const rvUsed = (c) => (c?.rahmenvertrag ? c.rahmenvertrag.eintraege.reduce((s, e) => s + e.stunden, 0) : 0);
+
+/* Pure Transforms für die Angebotsfreigabe (testbar, ohne React/State). */
+export function applyAcceptOffer(o) {
+  if (!o.angebot) return o;
+  const positionen = o.angebot.positionen.map((p) => ({ ...p, angenommen: true }));
+  return { ...o, angebot: { ...o.angebot, status: "angenommen", positionen }, stage: o.stage === "angebot" ? "auftrag" : o.stage };
+}
+export function applyRejectOffer(o, reason, from, stamp) {
+  if (!o.angebot) return o;
+  const emails = reason?.trim()
+    ? [...o.emails, { dir: "in", from, datum: stamp, betreff: "Angebot abgelehnt", body: reason.trim() }]
+    : o.emails;
+  return { ...o, angebot: { ...o.angebot, status: "abgelehnt" }, emails };
+}
+// Angebot wieder freigeben/erneut stellen (z. B. nach Ablehnung) oder in Klärung setzen.
+export function applyOfferStatus(o, status) {
+  if (!o.angebot) return o;
+  return { ...o, angebot: { ...o.angebot, status } };
+}
+
 export const STATUS_STYLE = {
   "offen": { bg: "#F3E7CE", fg: "#8A5A00" }, "angenommen": { bg: "#DCE7DC", fg: "#3F6B3F" },
-  "abgelehnt": { bg: "#F1D9D1", fg: "#A23C1E" },
+  "abgelehnt": { bg: "#F1D9D1", fg: "#A23C1E" }, "in Klärung": { bg: "#DEE6F2", fg: "#1D4E89" },
   "bestätigt": { bg: "#DCE7DC", fg: "#3F6B3F" }, "abgeschlossen": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "unterwegs": { bg: "#DEE6F2", fg: "#1D4E89" }, "zugestellt": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "geplant": { bg: "#EDE6D7", fg: "#7A6F5C" }, "läuft": { bg: "#DEE6F2", fg: "#1D4E89" }, "erledigt": { bg: "#DCE7DC", fg: "#3F6B3F" },

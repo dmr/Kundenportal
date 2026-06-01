@@ -1,5 +1,16 @@
 import { STAGES, STATUS_STYLE, stageIdx } from "../data/portal.js";
 
+/* Macht ein klickbares Nicht-Button-Element (div/li) tastaturbedienbar:
+   role="button", fokussierbar und Auslösen per Enter/Leertaste. */
+export const clickable = (onClick) => ({
+  role: "button",
+  tabIndex: 0,
+  onClick,
+  onKeyDown: (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(e); }
+  },
+});
+
 export function Status({ s }) {
   const st = STATUS_STYLE[s] || { bg: "#EDE6D7", fg: "#7A6F5C" };
   return <span className="chip" style={{ background: st.bg, color: st.fg }}>{s}</span>;

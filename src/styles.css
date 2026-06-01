@@ -70,6 +70,9 @@
 .confirmbox{border-radius:12px;padding:14px 18px;margin-bottom:22px;font-size:14px;}
 .confirmbox.ok{background:#DCE7DC;border:1px solid #Bcd3Bc;color:#2F5A2F;}
 .confirmbox.no{background:#F1D9D1;border:1px solid #E3BCAE;color:#8A3A1E;}
+.confirmbox.clarify{background:#DEE6F2;border:1px solid #BCD0E6;color:#1D4E89;}
+/* Sichtbarer Fokus für tastaturbediente Listenzeilen/Karten. */
+.row:focus-visible,.act:focus-visible,.pick:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
 .done-group .row{opacity:.78;}
 .linkbtn{background:none;border:none;font:inherit;font-size:13.5px;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
 .linkbtn.muted{color:var(--muted);}

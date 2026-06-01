@@ -1,17 +1,26 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { SEED, ME, today } from "./data/portal.js";
+import { SEED, ME, today, rvUsed, applyAcceptOffer, applyRejectOffer, applyOfferStatus } from "./data/portal.js";
 
 /* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
    sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
    Produktion: gegen echte API tauschen. */
 
 const StoreContext = createContext(null);
-const STORAGE_KEY = "kundenportal:v1";
+const STORAGE_KEY = "kundenportal";
+// Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
+// verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
+const STORAGE_VERSION = 2;
 
 function loadPersisted() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.v !== STORAGE_VERSION) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -24,7 +33,7 @@ export function StoreProvider({ children }) {
 
   // Bei jeder Änderung sichern. Reload stellt Daten und Sichtweise wieder her.
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ db, persp })); } catch { /* ignore */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: STORAGE_VERSION, db, persp })); } catch { /* ignore */ }
   }, [db, persp]);
 
   // Demodaten zurücksetzen (Klick-Demo: Seed wiederherstellen, Sicht verlassen).
@@ -43,7 +52,6 @@ export function StoreProvider({ children }) {
   const ordersOf = (id) => db.orders.filter((o) => o.customerId === id);
   const custOf = (id) => db.customers.find((c) => c.id === id);
   const orderById = (id) => db.orders.find((o) => o.id === id);
-  const rvUsed = (c) => (c?.rahmenvertrag ? c.rahmenvertrag.eintraege.reduce((s, e) => s + e.stunden, 0) : 0);
   // Sichtbare Teilaufgaben je nach Rolle (Kunde sieht nur sicht="kunde").
   const vTasks = (p) => (isIntern ? p.teilaufgaben : p.teilaufgaben.filter((t) => t.sicht === "kunde"));
 
@@ -90,26 +98,14 @@ export function StoreProvider({ children }) {
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
     mutPos(orderId, posId, (p) => ({ ...p, rueckfragen: [...p.rueckfragen, { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text: t }] }));
   }
-  // Ganzes Angebot annehmen (alles-oder-nichts): alle Positionen angenommen,
-  // Status "angenommen", Stage angebot→auftrag.
-  function acceptOffer(orderId) {
-    setDb((d) => ({ ...d, orders: d.orders.map((o) => {
-      if (o.id !== orderId || !o.angebot) return o;
-      const positionen = o.angebot.positionen.map((p) => ({ ...p, angenommen: true }));
-      return { ...o, angebot: { ...o.angebot, status: "angenommen", positionen }, stage: o.stage === "angebot" ? "auftrag" : o.stage };
-    }) }));
-  }
-  // Angebot ablehnen: Status "abgelehnt"; optionale Begründung als eingehende Nachricht.
+  // Angebotsfreigabe (alles-oder-nichts) über pure Transforms aus portal.js.
+  function acceptOffer(orderId) { mut(orderId, applyAcceptOffer); }
   function rejectOffer(orderId, reason) {
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    setDb((d) => ({ ...d, orders: d.orders.map((o) => {
-      if (o.id !== orderId || !o.angebot) return o;
-      const emails = reason?.trim()
-        ? [...o.emails, { dir: "in", from: meCust?.email || "kunde", datum: stamp, betreff: "Angebot abgelehnt", body: reason.trim() }]
-        : o.emails;
-      return { ...o, angebot: { ...o.angebot, status: "abgelehnt" }, emails };
-    }) }));
+    mut(orderId, (o) => applyRejectOffer(o, reason, meCust?.email || "kunde", stamp));
   }
+  // Intern: Angebot erneut stellen ("offen") oder als "in Klärung" markieren.
+  function setOfferStatus(orderId, status) { mut(orderId, (o) => applyOfferStatus(o, status)); }
   function setTaskStatus(orderId, posId, taskId, val) {
     mutPos(orderId, posId, (p) => ({ ...p, teilaufgaben: p.teilaufgaben.map((t) => (t.id === taskId ? { ...t, status: val } : t)) }));
   }
@@ -137,7 +133,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, rvUsed, vTasks, lastIn, latestIncoming, handlungsbedarf,
-    sendGen, sendPosMsg, acceptOffer, rejectOffer, setTaskStatus, addPositionTask, setIPStatus, setStage, createAnfrage,
+    sendGen, sendPosMsg, acceptOffer, rejectOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

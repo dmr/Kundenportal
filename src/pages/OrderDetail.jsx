@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { STAGES, STATI, stageIdx, suggestStage, parseEUR, fmtEUR } from "../data/portal.js";
-import { Status, Stepper } from "../components/ui.jsx";
+import { Status, Stepper, clickable } from "../components/ui.jsx";
 import PositionSheet from "../components/PositionSheet.jsx";
 
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, rejectOffer } = useStore();
+  const { orderById, custOf, isIntern, meCust, vTasks, lastIn, sendGen, setIPStatus, setStage, acceptOffer, rejectOffer, setOfferStatus } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState(false);
@@ -92,8 +92,23 @@ export default function OrderDetail() {
       {!isIntern && offer && offer.status === "angenommen" && (
         <div className="confirmbox ok">✓ Angebot angenommen — wir starten die Umsetzung. Den Fortschritt sehen Sie oben.</div>
       )}
+      {!isIntern && offer && offer.status === "in Klärung" && (
+        <div className="confirmbox clarify">Wir klären Ihre Rückfrage und stellen Ihnen anschließend ein aktualisiertes Angebot zur Freigabe.</div>
+      )}
       {!isIntern && offer && offer.status === "abgelehnt" && (
         <div className="confirmbox no">Angebot abgelehnt. Möchten Sie etwas anpassen? Schreiben Sie uns unten.</div>
+      )}
+
+      {/* Team: Angebots-Status steuern — Ablehnung/Klärung führt zurück zur Freigabe. */}
+      {isIntern && offer && (
+        <div className="frm" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
+          <span className="typ">Angebot:</span>
+          <Status s={offer.status} />
+          {offer.status === "offen" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "in Klärung")}>Auf „in Klärung" setzen</button>}
+          {offer.status === "in Klärung" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "offen")}>Erneut zur Freigabe stellen</button>}
+          {offer.status === "abgelehnt" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "offen")}>Überarbeitetes Angebot erneut stellen</button>}
+          <span className="note" style={{ margin: 0 }}>Steuert, was der Kunde zur Freigabe sieht.</span>
+        </div>
       )}
 
       {/* 3) Inhalt: Angebot/Bestellung & Positionen — Status führt, Preise dezent */}
@@ -121,7 +136,7 @@ export default function OrderDetail() {
             {offer.positionen.map((p) => {
               const done = vTasks(p).filter((t) => t.status === "erledigt").length, tot = vTasks(p).length;
               return (
-                <div className="row" key={p.id} onClick={() => setOpenPosId(p.id)}>
+                <div className="row" key={p.id} {...clickable(() => setOpenPosId(p.id))}>
                   <div className="grow">
                     <div className="name">{p.titel}</div>
                     <div className="meta">{tot > 0 ? done + "/" + tot + " Teilaufgaben erledigt" : "keine Teilaufgaben"} · {p.rueckfragen.length} Rückfragen</div>

@@ -1,7 +1,7 @@
 import { useNavigate, useParams, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { STAGES, stageIdx } from "../data/portal.js";
-import { Status } from "../components/ui.jsx";
+import { Status, clickable } from "../components/ui.jsx";
 
 export default function CustomerDetail() {
   const { custId } = useParams();
@@ -17,7 +17,7 @@ export default function CustomerDetail() {
       <div className="lede">{cust.kontakt} · {cust.ort}</div>
       <div className="card">
         {ordersOf(cust.id).map((o) => (
-          <div className="row" key={o.id} onClick={() => nav("/auftrag/" + o.id)}>
+          <div className="row" key={o.id} {...clickable(() => nav("/auftrag/" + o.id))}>
             <span className={"tlwtag" + (o.tlw ? "" : " none")}>{o.tlw || "Anfrage"}</span>
             <div className="grow">
               <div className="name">{o.titel}</div>

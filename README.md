@@ -14,6 +14,7 @@ nehmen Positionen an und stellen Rückfragen.
 ```bash
 npm install
 npm run dev      # lokaler Dev-Server (http://localhost:5173)
+npm test         # Unit-Tests (Vitest) der Kernlogik
 npm run build    # Production-Build nach dist/
 npm run preview  # Build lokal ansehen
 ```
