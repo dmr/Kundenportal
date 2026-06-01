@@ -111,12 +111,12 @@ export const fmtEUR = (n) => n.toLocaleString("de-DE", { minimumFractionDigits: 
 
 export const SEED = {
   customers: [
-    { id: "c1", name: "Meier Logistik GmbH", kontakt: "D. Meier", email: "einkauf@meier-logistik.de", ort: "Augsburg",
+    { id: "c1", name: "IGBT Modulhersteller A", kontakt: "D. Meier", email: "einkauf@igbt-modulhersteller-a.de", ort: "Augsburg",
       rahmenvertrag: { nr: "RV-2026-014", budgetStunden: 20, eintraege: [
         { titel: "Zusätzliche Halterung montiert", stunden: 2, datum: "2026-05-14" },
         { titel: "Kurzfristige Terminverschiebung organisiert", stunden: 1.5, datum: "2026-05-19" },
         { titel: "Sonderbeschriftung TLW 763", stunden: 3, datum: "2026-05-22" } ] } },
-    { id: "c2", name: "Schneider Bau AG", kontakt: "P. Schneider", email: "disposition@schneider-bau.ch", ort: "Bern", rahmenvertrag: null },
+    { id: "c2", name: "Thyristor Hersteller B", kontakt: "P. Schneider", email: "disposition@thyristor-hersteller-b.de", ort: "Bern", rahmenvertrag: null },
   ],
   orders: [
     {
@@ -130,7 +130,7 @@ export const SEED = {
             { id: "a2", titel: "Ladungssicherung vorbereiten", status: "erledigt", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-05-16" },
             { id: "a3", titel: "Anlieferung & Entladung beim Kunden", status: "läuft", sicht: "kunde", verantwortlich: "Fahrer M.", faellig: "2026-06-05" } ],
           rueckfragen: [
-            { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-05-18 10:02", text: "Brauchen Sie für die Entladung eine Hebebühne vor Ort?" },
+            { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-18 10:02", text: "Brauchen Sie für die Entladung eine Hebebühne vor Ort?" },
             { dir: "out", from: ME, datum: "2026-05-18 11:20", text: "Nein, wir bringen eine mobile Hebebühne mit." } ] },
         { id: "p2", titel: "Sonderbeschriftung", betrag: "1.620,00 €", angenommen: true,
           beschreibung: "Folierung mit Kundenlogo gemäß Designvorlage, beidseitige Anbringung, UV-beständig.",
@@ -144,7 +144,7 @@ export const SEED = {
         { id: "i1", titel: "Interner Liefertermin", datum: "2026-06-03", status: "läuft", info: "2 Tage Puffer vor Kundentermin" },
         { id: "i2", titel: "Testing-Puffer", datum: "2026-06-04", status: "geplant", info: "Funktionsprüfung vor Auslieferung" } ],
       emails: [
-        { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-05-19 09:14", betreff: "Liefertermin 5069", body: "Können Sie den Liefertermin auf KW 22 vorziehen?" },
+        { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-19 09:14", betreff: "Liefertermin 5069", body: "Können Sie den Liefertermin auf KW 22 vorziehen?" },
         { dir: "out", from: ME, datum: "2026-05-19 11:02", betreff: "AW: Liefertermin 5069", body: "KW 22 ist machbar, wir bestätigen Mittwoch." } ],
     },
     {
@@ -154,7 +154,7 @@ export const SEED = {
         { id: "p1", titel: "Wartung Hydrauliksystem", betrag: "740,00 €", angenommen: false,
           beschreibung: "Komplettwartung des Hydrauliksystems inkl. Öl- und Filterwechsel, Sichtprüfung aller Leitungen und Dichtungen, Funktionsprotokoll.",
           teilaufgaben: [ { id: "a1", titel: "Ersatzteile prüfen & reservieren", status: "geplant", sicht: "intern", verantwortlich: "Werkstatt", faellig: "2026-06-02" } ],
-          rueckfragen: [ { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-05-31 16:40", text: "Ist die Anfahrt in diesem Preis enthalten?" } ] },
+          rueckfragen: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-31 16:40", text: "Ist die Anfahrt in diesem Preis enthalten?" } ] },
         { id: "p2", titel: "Funktionsprüfung Bremsanlage", betrag: "450,00 €", angenommen: false,
           beschreibung: "Prüfung der Bremsanlage nach Herstellervorgaben inkl. Messprotokoll und Freigabevermerk.",
           teilaufgaben: [], rueckfragen: [] } ] },
@@ -164,7 +164,7 @@ export const SEED = {
       id: "o4", customerId: "c1", titel: "Zusatzlieferung Ersatzteile", tlw: null, auftragsNr: null, typ: "Auslieferung",
       stage: "anfrage", datum: "2026-05-31",
       angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
-      emails: [ { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-05-31 10:12", betreff: "Anfrage Ersatzteile", body: "Wir bräuchten kurzfristig Ersatzteile passend zu TLW 763." } ],
+      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-31 10:12", betreff: "Anfrage Ersatzteile", body: "Wir bräuchten kurzfristig Ersatzteile passend zu TLW 763." } ],
     },
     {
       id: "o3", customerId: "c2", titel: "Auslieferung TLW 410", tlw: "TLW 410", auftragsNr: "5031", typ: "Auslieferung",
@@ -179,7 +179,7 @@ export const SEED = {
       bestellung: { nr: "BE-76544", datum: "2026-04-15", status: "abgeschlossen" },
       lieferschein: { nr: "LS-89770", datum: "2026-04-28", status: "zugestellt" },
       internePlanung: [],
-      emails: [ { dir: "in", from: "disposition@schneider-bau.ch", datum: "2026-04-29 14:20", betreff: "Empfang bestätigt", body: "Ware ist eingetroffen, vielen Dank." } ],
+      emails: [ { dir: "in", from: "disposition@thyristor-hersteller-b.de", datum: "2026-04-29 14:20", betreff: "Empfang bestätigt", body: "Ware ist eingetroffen, vielen Dank." } ],
     },
     {
       id: "o5", customerId: "c1", titel: "Jahreswartung TLW 763", tlw: "TLW 763", auftragsNr: "5044", typ: "Service",
@@ -194,7 +194,7 @@ export const SEED = {
       bestellung: { nr: "BE-76401", datum: "2026-03-05", status: "abgeschlossen" },
       lieferschein: { nr: "LS-89610", datum: "2026-03-14", status: "zugestellt" },
       internePlanung: [],
-      emails: [ { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-03-15 08:30", betreff: "Wartung erledigt", body: "Alles bestens, danke für die schnelle Abwicklung." } ],
+      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-03-15 08:30", betreff: "Wartung erledigt", body: "Alles bestens, danke für die schnelle Abwicklung." } ],
     },
     {
       id: "o6", customerId: "c1", titel: "Auslieferung Anbauteile", tlw: "TLW 763", auftragsNr: "5018", typ: "Auslieferung",
@@ -230,7 +230,7 @@ export const SEED = {
       id: "o8", customerId: "c1", titel: "Kalibrierung Drehmomentschlüssel DS-200", tlw: null, auftragsNr: null, typ: "Kalibrierung",
       geraetId: "g1", stage: "anfrage", datum: "2026-05-28",
       angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
-      emails: [ { dir: "in", from: "einkauf@meier-logistik.de", datum: "2026-05-28 09:40", betreff: "Kalibrierung fällig DS-200", body: "Unser Drehmomentschlüssel DS-200 ist überfällig — bitte Kalibrierung einplanen." } ],
+      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-28 09:40", betreff: "Kalibrierung fällig DS-200", body: "Unser Drehmomentschlüssel DS-200 ist überfällig — bitte Kalibrierung einplanen." } ],
     },
   ],
   geraete: [
