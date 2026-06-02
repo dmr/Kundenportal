@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { SEED, ME, today, applyAcceptOffer, applyOfferStatus, applyHistorieEntry } from "./data/portal.js";
+import { SEED, ME, today, applyAcceptOffer, applyOfferStatus, applyHistorieEntry, threadOpen } from "./data/portal.js";
 
 /* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
    sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 8;
+const STORAGE_VERSION = 9;
 
 function loadPersisted() {
   try {
@@ -58,15 +58,11 @@ export function StoreProvider({ children }) {
   // Sichtbare Teilaufgaben je nach Rolle (Kunde sieht nur sicht="kunde").
   const vTasks = (p) => (isIntern ? p.teilaufgaben : p.teilaufgaben.filter((t) => t.sicht === "kunde"));
 
-  const lastIn = (arr) => arr.length > 0 && arr[arr.length - 1].dir === "in";
-  function hasOpenRueckfrage(o) {
-    if (o.angebot) for (const p of o.angebot.positionen) if (lastIn(p.rueckfragen)) return true;
-    return lastIn(o.emails);
-  }
+  // Aktion nötig, sobald irgendein Thread des Vorgangs offen ist.
+  function hasOpenRueckfrage(o) { return o.threads.some(threadOpen); }
   function latestIncoming(o) {
     const c = [];
-    o.emails.forEach((m) => { if (m.dir === "in") c.push({ datum: m.datum, from: m.from, betreff: m.betreff, body: m.body }); });
-    o.angebot?.positionen.forEach((p) => p.rueckfragen.forEach((m) => { if (m.dir === "in") c.push({ datum: m.datum, from: m.from, betreff: "Position: " + p.titel, body: m.text }); }));
+    o.threads.forEach((th) => th.nachrichten.forEach((m) => { if (m.dir === "in") c.push({ datum: m.datum, from: m.from, betreff: th.titel, body: m.text }); }));
     c.sort((a, b) => (a.datum < b.datum ? 1 : -1));
     return c[0];
   }
@@ -81,30 +77,30 @@ export function StoreProvider({ children }) {
   function mutPos(orderId, posId, fn) {
     mut(orderId, (o) => ({ ...o, angebot: { ...o.angebot, positionen: o.angebot.positionen.map((p) => (p.id === posId ? fn(p) : p)) } }));
   }
-  function addEmail(orderId, dir, from, betreff, body) {
+  // ---- Threads -----------------------------------------------------------
+  function setThread(orderId, threadId, fn) {
+    mut(orderId, (o) => ({ ...o, threads: o.threads.map((t) => (t.id === threadId ? fn(t) : t)) }));
+  }
+  function newMessage(text, anhaenge) {
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    // Neue Nachricht öffnet den Thread automatisch wieder.
-    mut(orderId, (o) => ({ ...o, kommGeloest: false, emails: [...o.emails, { dir, from, datum: stamp, betreff, body }] }));
+    return { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text, anhaenge: anhaenge || [] };
   }
-  function sendGen(orderId, draft) {
-    const t = (draft || "").trim(); if (!t) return;
-    const o = orderById(orderId);
-    addEmail(
-      orderId,
-      isIntern ? "out" : "in",
-      isIntern ? ME : meCust.email,
-      isIntern ? "AW: " + (o.emails.at(-1)?.betreff?.replace(/^AW: /, "") || o.titel) : "Nachricht: " + o.titel,
-      t,
-    );
+  // Nachricht senden – öffnet den Thread automatisch wieder.
+  function sendThreadMsg(orderId, threadId, text, anhaenge) {
+    const t = (text || "").trim();
+    if (!t && !(anhaenge && anhaenge.length)) return;
+    setThread(orderId, threadId, (th) => ({ ...th, geloest: false, nachrichten: [...th.nachrichten, newMessage(t, anhaenge)] }));
   }
-  function sendPosMsg(orderId, posId, draft) {
-    const t = (draft || "").trim(); if (!t) return;
-    const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    mutPos(orderId, posId, (p) => ({ ...p, rfGeloest: false, rueckfragen: [...p.rueckfragen, { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text: t }] }));
+  // Neuen (benannten) Thread anlegen, optional an eine Position gebunden.
+  function createThread(orderId, { titel, prioritaet, positionId }, text, anhaenge) {
+    const id = "th" + Date.now();
+    const msg = newMessage((text || "").trim(), anhaenge);
+    const nachrichten = msg.text || msg.anhaenge.length ? [msg] : [];
+    mut(orderId, (o) => ({ ...o, threads: [...o.threads, { id, titel: titel?.trim() || "Thema", prioritaet: prioritaet || "normal", positionId: positionId || null, geloest: false, nachrichten }] }));
+    return id;
   }
-  // Threads als gelöst markieren / wieder öffnen.
-  function setKommResolved(orderId, val) { mut(orderId, (o) => ({ ...o, kommGeloest: val })); }
-  function setPosResolved(orderId, posId, val) { mutPos(orderId, posId, (p) => ({ ...p, rfGeloest: val })); }
+  function setThreadResolved(orderId, threadId, val) { setThread(orderId, threadId, (t) => ({ ...t, geloest: val })); }
+  function setThreadPriority(orderId, threadId, val) { setThread(orderId, threadId, (t) => ({ ...t, prioritaet: val })); }
   // Angebotsfreigabe (alles-oder-nichts) über pure Transform aus portal.js.
   function acceptOffer(orderId) { mut(orderId, applyAcceptOffer); }
   // Angebotsstatus setzen ("offen" / "in Klärung").
@@ -138,7 +134,8 @@ export function StoreProvider({ children }) {
     setDb((d) => ({ ...d, orders: [
       { id, customerId: meCust.id, titel: f.titel.trim(), tlw: null, auftragsNr: null, typ: f.typ, geraetId: f.geraetId || null, stage: "anfrage", datum: today(),
         angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
-        emails: [{ dir: "in", from: meCust.email, datum: today() + " 00:00", betreff: "Anfrage: " + f.titel.trim(), body: f.text || "" }] },
+        threads: [{ id: "th" + Date.now(), titel: "Anfrage", prioritaet: "normal", positionId: null, geloest: false,
+          nachrichten: [{ dir: "in", from: meCust.email, datum: today() + " 00:00", text: f.text?.trim() || ("Neue Anfrage: " + f.titel.trim()), anhaenge: [] }] }] },
       ...d.orders,
     ] }));
     return id;
@@ -146,8 +143,8 @@ export function StoreProvider({ children }) {
 
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
-    ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, lastIn, latestIncoming, handlungsbedarf,
-    sendGen, sendPosMsg, setKommResolved, setPosResolved, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
+    ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, latestIncoming, handlungsbedarf,
+    sendThreadMsg, createThread, setThreadResolved, setThreadPriority, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

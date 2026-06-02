@@ -1,14 +1,29 @@
 import { describe, it, expect } from "vitest";
 import {
   suggestStage, applyAcceptOffer, applyOfferStatus,
-  addMonths, calibNextDue, calibStatus, applyHistorieEntry,
+  addMonths, calibNextDue, calibStatus, applyHistorieEntry, threadOpen,
 } from "./portal.js";
 
+describe("threadOpen", () => {
+  it("offen, wenn nicht gelöst und letzte Nachricht eingehend", () => {
+    expect(threadOpen({ geloest: false, nachrichten: [{ dir: "in" }] })).toBe(true);
+  });
+  it("nicht offen, wenn gelöst", () => {
+    expect(threadOpen({ geloest: true, nachrichten: [{ dir: "in" }] })).toBe(false);
+  });
+  it("nicht offen, wenn letzte Nachricht ausgehend", () => {
+    expect(threadOpen({ geloest: false, nachrichten: [{ dir: "in" }, { dir: "out" }] })).toBe(false);
+  });
+  it("nicht offen ohne Nachrichten", () => {
+    expect(threadOpen({ geloest: false, nachrichten: [] })).toBe(false);
+  });
+});
+
 // Minimal-Fixtures für die Angebots-/Fortschrittslogik.
-const pos = (over = {}) => ({ id: "p1", betrag: "100,00 €", angenommen: false, teilaufgaben: [], rueckfragen: [], ...over });
+const pos = (over = {}) => ({ id: "p1", betrag: "100,00 €", angenommen: false, teilaufgaben: [], ...over });
 const order = (over = {}) => ({
   id: "o", stage: "angebot", angebot: { nr: "AN-1", datum: "2026-01-01", status: "offen", positionen: [pos()] },
-  bestellung: null, lieferschein: null, emails: [], ...over,
+  bestellung: null, lieferschein: null, threads: [], ...over,
 });
 
 describe("suggestStage", () => {

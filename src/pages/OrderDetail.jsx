@@ -1,17 +1,21 @@
 import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
-import { STAGES, STATI, stageIdx, suggestStage, parseEUR, fmtEUR } from "../data/portal.js";
+import { STAGES, STATI, stageIdx, suggestStage, threadOpen, parseEUR, fmtEUR } from "../data/portal.js";
 import { Status, Stepper, clickable } from "../components/ui.jsx";
 import PositionSheet from "../components/PositionSheet.jsx";
 import Thread from "../components/Thread.jsx";
+import NewThreadForm from "../components/NewThreadForm.jsx";
+
+const PRIO_RANK = { hoch: 0, normal: 1, niedrig: 2 };
 
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, lastIn, sendGen, setKommResolved, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
+  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
   const [querying, setQuerying] = useState(false);
   const [queryText, setQueryText] = useState("");
+  const [newThread, setNewThread] = useState(false);
 
   const ord = orderById(ordId);
   if (!ord) return <Navigate to={isIntern ? "/intern" : "/kunde"} replace />;
@@ -29,10 +33,14 @@ export default function OrderDetail() {
   const taskDates = offer ? offer.positionen.flatMap((p) => vTasks(p).map((t) => t.faellig).filter(Boolean)) : [];
   const custDue = taskDates.length ? taskDates.slice().sort().at(-1) : (ord.lieferschein?.datum || null);
 
-  // Rückfrage zum Angebot: Nachricht senden + Angebot in „in Klärung" – kein „Ablehnen".
+  const posThreads = (pid) => ord.threads.filter((t) => t.positionId === pid);
+  const generalThreads = ord.threads.filter((t) => !t.positionId)
+    .slice().sort((a, b) => (PRIO_RANK[a.prioritaet] - PRIO_RANK[b.prioritaet]) || (Number(threadOpen(b)) - Number(threadOpen(a))));
+
+  // Rückfrage zum Angebot: als eigener Thread + Angebot in „in Klärung" – kein „Ablehnen".
   const sendQuery = () => {
     if (!queryText.trim()) return;
-    sendGen(ord.id, queryText);
+    createThread(ord.id, { titel: "Rückfrage zum Angebot " + offer.nr, prioritaet: "normal", positionId: null }, queryText);
     setOfferStatus(ord.id, "in Klärung");
     setQuerying(false); setQueryText("");
   };
@@ -157,9 +165,9 @@ export default function OrderDetail() {
                 <div className="row" key={p.id} {...clickable(() => setOpenPosId(p.id))}>
                   <div className="grow">
                     <div className="name">{p.titel}</div>
-                    <div className="meta">{tot > 0 ? done + "/" + tot + " Teilaufgaben erledigt" : "in Vorbereitung"}{p.rueckfragen.length ? " · " + p.rueckfragen.length + " Rückfragen" : ""}</div>
+                    <div className="meta">{tot > 0 ? done + "/" + tot + " Teilaufgaben erledigt" : "in Vorbereitung"}{posThreads(p.id).length ? " · " + posThreads(p.id).length + " Rückfragen" : ""}</div>
                   </div>
-                  {isIntern && lastIn(p.rueckfragen) && <span className="chip" style={{ background: "#F3E7CE", color: "#8A5A00" }}>Rückfrage offen</span>}
+                  {isIntern && posThreads(p.id).some(threadOpen) && <span className="chip" style={{ background: "#F3E7CE", color: "#8A5A00" }}>Rückfrage offen</span>}
                   <span className="pbetrag">{p.betrag}</span><span className="chev">›</span>
                 </div>
               );
@@ -192,16 +200,28 @@ export default function OrderDetail() {
       )}
 
       <div style={{ marginTop: 24 }}>
-        {!isIntern && <div className="muted small" style={{ marginBottom: 8 }}>Offene Fragen oder weitere Punkte? Schreiben Sie uns hier — wir antworten direkt am Vorgang und Sie markieren das Thema als gelöst, wenn es passt.</div>}
-        <Thread
-          title={isIntern ? "Kommunikation" : "Rückfragen & weitere Punkte"}
-          messages={ord.emails.map((m) => ({ dir: m.dir, datum: m.datum, text: m.body || m.betreff }))}
-          resolved={!!ord.kommGeloest}
-          onToggleResolved={() => setKommResolved(ord.id, !ord.kommGeloest)}
-          onSend={(t) => sendGen(ord.id, t)}
-          placeholder={isIntern ? "Nachricht an den Kunden …" : "Rückfrage oder weiteren Punkt schreiben …"}
-          emptyText="Noch keine Nachrichten zu diesem Vorgang."
-        />
+        <div className="sec" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <span>{isIntern ? "Kommunikation" : "Rückfragen & weitere Punkte"}</span>
+          {!newThread && <button className="btn ghost sm" onClick={() => setNewThread(true)}>+ Neues Thema</button>}
+        </div>
+        {!isIntern && <div className="muted small" style={{ marginBottom: 10 }}>Eröffnen Sie je Anliegen ein Thema, hängen Sie Screenshots/PDFs an und markieren Sie es als gelöst, wenn es passt.</div>}
+        {newThread && <NewThreadForm onCancel={() => setNewThread(false)} onCreate={(d) => { createThread(ord.id, { ...d, positionId: null }, d.text); setNewThread(false); }} />}
+        {generalThreads.length === 0 && !newThread && <div className="card"><div className="empty">Noch keine Themen. Eröffnen Sie eines mit „+ Neues Thema".</div></div>}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {generalThreads.map((t) => (
+            <Thread
+              key={t.id}
+              title={t.titel}
+              messages={t.nachrichten}
+              resolved={t.geloest}
+              prioritaet={t.prioritaet}
+              onPriority={(v) => setThreadPriority(ord.id, t.id, v)}
+              onToggleResolved={() => setThreadResolved(ord.id, t.id, !t.geloest)}
+              onSend={(text, anh) => sendThreadMsg(ord.id, t.id, text, anh)}
+              placeholder={isIntern ? "Antwort schreiben …" : "Nachricht schreiben …"}
+            />
+          ))}
+        </div>
       </div>
 
       {openPos && <PositionSheet ord={ord} pos={openPos} onClose={() => setOpenPosId(null)} />}

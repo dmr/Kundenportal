@@ -83,6 +83,19 @@ export function applyHistorieEntry(g, entry) {
   return { ...g, ...patch, historie };
 }
 
+/* ---- Kommunikations-Threads --------------------------------------------- */
+export const PRIORITIES = ["niedrig", "normal", "hoch"];
+export const PRIO_STYLE = {
+  niedrig: { bg: "#EDE6D7", fg: "#7A6F5C" },
+  normal: { bg: "#DEE6F2", fg: "#1D4E89" },
+  hoch: { bg: "#F1D9D1", fg: "#A23C1E" },
+};
+// Thread braucht Aktion, wenn offen und die letzte Nachricht vom Kunden kam.
+export function threadOpen(t) {
+  const last = t.nachrichten[t.nachrichten.length - 1];
+  return !t.geloest && !!last && last.dir === "in";
+}
+
 export const STATUS_STYLE = {
   "offen": { bg: "#F3E7CE", fg: "#8A5A00" }, "angenommen": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "in Klärung": { bg: "#DEE6F2", fg: "#1D4E89" },
@@ -112,24 +125,24 @@ export const SEED = {
           teilaufgaben: [
             { id: "a1", titel: "Tour disponieren & Fahrer einplanen", status: "erledigt", sicht: "intern", verantwortlich: "Disposition", faellig: "2026-05-13" },
             { id: "a2", titel: "Ladungssicherung vorbereiten", status: "erledigt", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-05-16" },
-            { id: "a3", titel: "Anlieferung & Entladung beim Kunden", status: "läuft", sicht: "kunde", verantwortlich: "Fahrer M.", faellig: "2026-06-05" } ],
-          rueckfragen: [
-            { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-18 10:02", text: "Brauchen Sie für die Entladung eine Hebebühne vor Ort?" },
-            { dir: "out", from: ME, datum: "2026-05-18 11:20", text: "Nein, wir bringen eine mobile Hebebühne mit." } ] },
+            { id: "a3", titel: "Anlieferung & Entladung beim Kunden", status: "läuft", sicht: "kunde", verantwortlich: "Fahrer M.", faellig: "2026-06-05" } ] },
         { id: "p2", titel: "Sonderbeschriftung", betrag: "1.620,00 €", angenommen: true,
           beschreibung: "Folierung mit Kundenlogo gemäß Designvorlage, beidseitige Anbringung, UV-beständig.",
           teilaufgaben: [
             { id: "a1", titel: "Folie nach Vorlage bestellen", status: "erledigt", sicht: "intern", verantwortlich: "Einkauf", faellig: "2026-05-15" },
-            { id: "a2", titel: "Beschriftung anbringen", status: "geplant", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-06-02" } ],
-          rueckfragen: [] } ] },
+            { id: "a2", titel: "Beschriftung anbringen", status: "geplant", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-06-02" } ] } ] },
       bestellung: { nr: "BE-77123", datum: "2026-05-12", status: "bestätigt" },
       lieferschein: { nr: "LS-90011", datum: "2026-05-20", status: "unterwegs" },
       internePlanung: [
         { id: "i1", titel: "Interner Liefertermin", datum: "2026-06-03", status: "läuft", info: "2 Tage Puffer vor Kundentermin" },
         { id: "i2", titel: "Testing-Puffer", datum: "2026-06-04", status: "geplant", info: "Funktionsprüfung vor Auslieferung" } ],
-      emails: [
-        { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-19 09:14", betreff: "Liefertermin 5069", body: "Können Sie den Liefertermin auf KW 22 vorziehen?" },
-        { dir: "out", from: ME, datum: "2026-05-19 11:02", betreff: "AW: Liefertermin 5069", body: "KW 22 ist machbar, wir bestätigen Mittwoch." } ],
+      threads: [
+        { id: "th1", titel: "Liefertermin 5069", prioritaet: "hoch", geloest: false, nachrichten: [
+          { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-19 09:14", text: "Können Sie den Liefertermin auf KW 22 vorziehen?" },
+          { dir: "out", from: ME, datum: "2026-05-19 11:02", text: "KW 22 ist machbar, wir bestätigen Mittwoch." } ] },
+        { id: "th2", positionId: "p1", titel: "Rückfrage: Transport", prioritaet: "normal", geloest: true, nachrichten: [
+          { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-18 10:02", text: "Brauchen Sie für die Entladung eine Hebebühne vor Ort?", anhaenge: [{ name: "Anlieferung_vor_Ort.jpg", typ: "bild", url: "products/tlw763.jpg" }] },
+          { dir: "out", from: ME, datum: "2026-05-18 11:20", text: "Nein, wir bringen eine mobile Hebebühne mit." } ] } ],
     },
     {
       id: "o2", customerId: "c1", titel: "Service TLW 823", tlw: "TLW 823", auftragsNr: "5070", typ: "Service",
@@ -137,18 +150,22 @@ export const SEED = {
       angebot: { nr: "AN-2026-0431", datum: "2026-05-21", status: "offen", positionen: [
         { id: "p1", titel: "Wartung Hydrauliksystem", betrag: "740,00 €", angenommen: false,
           beschreibung: "Komplettwartung des Hydrauliksystems inkl. Öl- und Filterwechsel, Sichtprüfung aller Leitungen und Dichtungen, Funktionsprotokoll.",
-          teilaufgaben: [ { id: "a1", titel: "Ersatzteile prüfen & reservieren", status: "geplant", sicht: "intern", verantwortlich: "Werkstatt", faellig: "2026-06-02" } ],
-          rueckfragen: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-31 16:40", text: "Ist die Anfahrt in diesem Preis enthalten?" } ] },
+          teilaufgaben: [ { id: "a1", titel: "Ersatzteile prüfen & reservieren", status: "geplant", sicht: "intern", verantwortlich: "Werkstatt", faellig: "2026-06-02" } ] },
         { id: "p2", titel: "Funktionsprüfung Bremsanlage", betrag: "450,00 €", angenommen: false,
           beschreibung: "Prüfung der Bremsanlage nach Herstellervorgaben inkl. Messprotokoll und Freigabevermerk.",
-          teilaufgaben: [], rueckfragen: [] } ] },
-      bestellung: null, lieferschein: null, internePlanung: [], emails: [],
+          teilaufgaben: [] } ] },
+      bestellung: null, lieferschein: null, internePlanung: [],
+      threads: [
+        { id: "th1", positionId: "p1", titel: "Rückfrage: Wartung Hydrauliksystem", prioritaet: "normal", geloest: false, nachrichten: [
+          { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-31 16:40", text: "Ist die Anfahrt in diesem Preis enthalten?" } ] } ],
     },
     {
       id: "o4", customerId: "c1", titel: "Zusatzlieferung Ersatzteile", tlw: null, auftragsNr: null, typ: "Auslieferung",
       stage: "anfrage", datum: "2026-05-31",
       angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
-      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-31 10:12", betreff: "Anfrage Ersatzteile", body: "Wir bräuchten kurzfristig Ersatzteile passend zu TLW 763." } ],
+      threads: [
+        { id: "th1", titel: "Anfrage Ersatzteile", prioritaet: "normal", geloest: false, nachrichten: [
+          { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-31 10:12", text: "Wir bräuchten kurzfristig Ersatzteile passend zu TLW 763." } ] } ],
     },
     {
       id: "o3", customerId: "c2", titel: "Auslieferung TLW 410", tlw: "TLW 410", auftragsNr: "5031", typ: "Auslieferung",
@@ -158,12 +175,13 @@ export const SEED = {
           beschreibung: "Transport und Inbetriebnahme der Anlage am Standort Bern inkl. Einweisung.",
           teilaufgaben: [
             { id: "a1", titel: "Transport", status: "erledigt", sicht: "kunde", verantwortlich: "Fahrer K.", faellig: "2026-04-20" },
-            { id: "a2", titel: "Inbetriebnahme & Einweisung", status: "erledigt", sicht: "kunde", verantwortlich: "Technik", faellig: "2026-04-28" } ],
-          rueckfragen: [] } ] },
+            { id: "a2", titel: "Inbetriebnahme & Einweisung", status: "erledigt", sicht: "kunde", verantwortlich: "Technik", faellig: "2026-04-28" } ] } ] },
       bestellung: { nr: "BE-76544", datum: "2026-04-15", status: "abgeschlossen" },
       lieferschein: { nr: "LS-89770", datum: "2026-04-28", status: "zugestellt" },
       internePlanung: [],
-      emails: [ { dir: "in", from: "disposition@thyristor-hersteller-b.de", datum: "2026-04-29 14:20", betreff: "Empfang bestätigt", body: "Ware ist eingetroffen, vielen Dank." } ],
+      threads: [
+        { id: "th1", titel: "Empfang bestätigt", prioritaet: "niedrig", geloest: true, nachrichten: [
+          { dir: "in", from: "disposition@thyristor-hersteller-b.de", datum: "2026-04-29 14:20", text: "Ware ist eingetroffen, vielen Dank." } ] } ],
     },
     {
       id: "o5", customerId: "c1", titel: "Jahreswartung TLW 763", tlw: "TLW 763", auftragsNr: "5044", typ: "Service",
@@ -173,12 +191,13 @@ export const SEED = {
           beschreibung: "Komplette Jahreswartung nach Herstellervorgabe inkl. Sicherheitsprüfung und Prüfprotokoll.",
           teilaufgaben: [
             { id: "a1", titel: "Wartung durchführen", status: "erledigt", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-03-12" },
-            { id: "a2", titel: "Prüfprotokoll übergeben", status: "erledigt", sicht: "kunde", verantwortlich: "Technik", faellig: "2026-03-14" } ],
-          rueckfragen: [] } ] },
+            { id: "a2", titel: "Prüfprotokoll übergeben", status: "erledigt", sicht: "kunde", verantwortlich: "Technik", faellig: "2026-03-14" } ] } ] },
       bestellung: { nr: "BE-76401", datum: "2026-03-05", status: "abgeschlossen" },
       lieferschein: { nr: "LS-89610", datum: "2026-03-14", status: "zugestellt" },
       internePlanung: [],
-      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-03-15 08:30", betreff: "Wartung erledigt", body: "Alles bestens, danke für die schnelle Abwicklung." } ],
+      threads: [
+        { id: "th1", titel: "Wartung erledigt", prioritaet: "niedrig", geloest: true, nachrichten: [
+          { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-03-15 08:30", text: "Alles bestens, danke für die schnelle Abwicklung." } ] } ],
     },
     {
       id: "o6", customerId: "c1", titel: "Anbauteile TLW 763", tlw: "TLW 763", auftragsNr: "5018", typ: "Service",
@@ -188,12 +207,11 @@ export const SEED = {
           beschreibung: "Lieferung der Anbauteile inkl. Montage und Funktionsprüfung vor Ort.",
           teilaufgaben: [
             { id: "a1", titel: "Teile liefern", status: "erledigt", sicht: "kunde", verantwortlich: "Fahrer K.", faellig: "2026-02-18" },
-            { id: "a2", titel: "Montage & Abnahme", status: "erledigt", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-02-20" } ],
-          rueckfragen: [] } ] },
+            { id: "a2", titel: "Montage & Abnahme", status: "erledigt", sicht: "kunde", verantwortlich: "Werkstatt", faellig: "2026-02-20" } ] } ] },
       bestellung: { nr: "BE-76220", datum: "2026-02-11", status: "abgeschlossen" },
       lieferschein: { nr: "LS-89412", datum: "2026-02-20", status: "zugestellt" },
       internePlanung: [],
-      emails: [],
+      threads: [],
     },
     {
       id: "o7", customerId: "c2", titel: "Kalibrierung TLW 813", tlw: "TLW 813", auftragsNr: "4998", typ: "Kalibrierung",
@@ -203,18 +221,21 @@ export const SEED = {
           beschreibung: "Kalibrierung des Lastwechsel-Testsystems nach Herstellervorgabe inkl. Justage und Ausstellung des Kalibrierzertifikats.",
           teilaufgaben: [
             { id: "a1", titel: "Kalibrierung durchführen", status: "erledigt", sicht: "kunde", verantwortlich: "Kalibrierlabor", faellig: "2025-02-15" },
-            { id: "a2", titel: "Zertifikat ausstellen", status: "erledigt", sicht: "kunde", verantwortlich: "Kalibrierlabor", faellig: "2025-02-16" } ],
-          rueckfragen: [] } ] },
+            { id: "a2", titel: "Zertifikat ausstellen", status: "erledigt", sicht: "kunde", verantwortlich: "Kalibrierlabor", faellig: "2025-02-16" } ] } ] },
       bestellung: { nr: "BE-75810", datum: "2025-02-07", status: "abgeschlossen" },
       lieferschein: { nr: "LS-88905", datum: "2025-02-16", status: "zugestellt" },
       internePlanung: [],
-      emails: [],
+      threads: [
+        { id: "th1", titel: "Kalibrierzertifikat", prioritaet: "niedrig", geloest: true, nachrichten: [
+          { dir: "out", from: ME, datum: "2025-02-16 10:00", text: "Anbei das Kalibrierzertifikat zu TLW 813.", anhaenge: [{ name: "Kalibrierzertifikat_TLW813.pdf", typ: "pdf", url: "sample/zertifikat.pdf" }] } ] } ],
     },
     {
       id: "o8", customerId: "c1", titel: "Kalibrierung TLW 763", tlw: "TLW 763", auftragsNr: null, typ: "Kalibrierung",
       geraetId: "g1", stage: "anfrage", datum: "2026-05-28",
       angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
-      emails: [ { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-28 09:40", betreff: "Kalibrierung fällig TLW 763", body: "Unser Lastwechsel-Testsystem TLW 763 ist überfällig — bitte Kalibrierung einplanen." } ],
+      threads: [
+        { id: "th1", titel: "Kalibrierung fällig", prioritaet: "hoch", geloest: false, nachrichten: [
+          { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-28 09:40", text: "Unser Lastwechsel-Testsystem TLW 763 ist überfällig — bitte Kalibrierung einplanen." } ] } ],
     },
   ],
   geraete: [

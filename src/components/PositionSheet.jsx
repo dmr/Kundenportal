@@ -3,12 +3,15 @@ import { useStore } from "../store.jsx";
 import { STATI } from "../data/portal.js";
 import { Status } from "./ui.jsx";
 import Thread from "./Thread.jsx";
+import NewThreadForm from "./NewThreadForm.jsx";
 
 /* Positions-Detail als Modal/Bottom-Sheet: Beschreibung, Teilaufgaben (rollenabhängig
-   sichtbar/bearbeitbar), Rückfragen-Thread und – für Kunden – "Position annehmen". */
+   sichtbar/bearbeitbar) und Rückfrage-Threads zu dieser Position. */
 export default function PositionSheet({ ord, pos, onClose }) {
-  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendPosMsg, setPosResolved } = useStore();
+  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendThreadMsg, createThread, setThreadResolved, setThreadPriority } = useStore();
   const [taskForm, setTaskForm] = useState(null);
+  const [newThread, setNewThread] = useState(false);
+  const posThreads = ord.threads.filter((t) => t.positionId === pos.id);
 
   const addTask = () => {
     if (!taskForm?.titel?.trim()) return;
@@ -56,16 +59,26 @@ export default function PositionSheet({ ord, pos, onClose }) {
             <button className="btn ghost sm" style={{ marginTop: 8 }} onClick={() => setTaskForm({ titel: "", sicht: "kunde", verantwortlich: "", faellig: "" })}>+ Teilaufgabe</button>
           ))}
 
-          <div style={{ marginTop: 16 }}>
-            <Thread
-              title="Rückfragen zur Position"
-              messages={pos.rueckfragen.map((m) => ({ dir: m.dir, datum: m.datum, text: m.text }))}
-              resolved={!!pos.rfGeloest}
-              onToggleResolved={() => setPosResolved(ord.id, pos.id, !pos.rfGeloest)}
-              onSend={(t) => sendPosMsg(ord.id, pos.id, t)}
-              placeholder={isIntern ? "Antwort zu dieser Position …" : "Rückfrage zu dieser Position …"}
-              emptyText="Keine Rückfragen."
-            />
+          <div className="subh" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Rückfragen zur Position</span>
+            {!newThread && <button className="btn ghost sm" onClick={() => setNewThread(true)}>+ Rückfrage</button>}
+          </div>
+          {newThread && <NewThreadForm defaultTitel={"Rückfrage: " + pos.titel} onCancel={() => setNewThread(false)} onCreate={(d) => { createThread(ord.id, { ...d, positionId: pos.id }, d.text); setNewThread(false); }} />}
+          {posThreads.length === 0 && !newThread && <div className="muted small">Noch keine Rückfragen zu dieser Position.</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
+            {posThreads.map((t) => (
+              <Thread
+                key={t.id}
+                title={t.titel}
+                messages={t.nachrichten}
+                resolved={t.geloest}
+                prioritaet={t.prioritaet}
+                onPriority={(v) => setThreadPriority(ord.id, t.id, v)}
+                onToggleResolved={() => setThreadResolved(ord.id, t.id, !t.geloest)}
+                onSend={(text, anh) => sendThreadMsg(ord.id, t.id, text, anh)}
+                placeholder={isIntern ? "Antwort zu dieser Position …" : "Rückfrage zu dieser Position …"}
+              />
+            ))}
           </div>
         </div>
       </div>
