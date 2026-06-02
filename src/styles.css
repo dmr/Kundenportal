@@ -99,6 +99,8 @@
 .thread-title{font-weight:600;font-size:13px;flex:1;min-width:0;}
 .thread-toggle{background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;padding:0;line-height:1;}
 .thread.collapsed .thread-head{border-bottom:none;}
+.thread-preview{padding:0 16px 11px 30px;color:var(--ink);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.thread-preview .muted{color:var(--muted);}
 .thread-status{font-size:12px;font-weight:600;color:#3F6B3F;}
 .thread-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
 .tmsg{max-width:84%;}

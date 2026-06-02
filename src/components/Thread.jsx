@@ -23,6 +23,9 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
   const fileRef = useRef(null);
 
   const commitTitle = () => { if (editTitle && editTitle.trim()) onTitle(editTitle.trim()); setEditTitle(null); };
+  const last = messages[messages.length - 1];
+  const lastMine = last && (isIntern ? last.dir === "out" : last.dir === "in");
+  const lastText = last ? (last.text || (last.anhaenge?.length ? "📎 Anhang" : "")) : "";
 
   const onFiles = (e) => {
     [...e.target.files].forEach((f) => {
@@ -65,6 +68,12 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
           {resolved && <span className="thread-status">✓ Gelöst</span>}
         </div>
       </div>
+
+      {collapsed && last && (
+        <div className="thread-preview" onClick={() => setCollapsed(false)}>
+          <span className="muted">{lastMine ? "Sie" : isIntern ? "Kunde" : "Wir"}:</span> {lastText}
+        </div>
+      )}
 
       {!collapsed && (<>
         <div className="thread-body">
