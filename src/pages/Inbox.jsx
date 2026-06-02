@@ -14,13 +14,18 @@ const COLS = [
   { key: "geloestAm", label: "Erledigt am" },
 ];
 
-// Triage einer unzugeordneten E-Mail: Kunde + Auftrag wählen, oder neuen Auftrag anlegen.
-function MailTriage({ mail, customers, ordersOf, custByEmail, onAssign, onNew }) {
+// Triage einer unzugeordneten E-Mail: Kunde + Auftrag + (optional) Thread wählen,
+// an bestehenden Thread anhängen / als neuen Thread zuordnen / neuen Auftrag anlegen.
+function MailTriage({ mail, customers, ordersOf, custByEmail, onAppend, onAssign, onNew }) {
   const matched = custByEmail(mail.from);
   const [cust, setCust] = useState(matched?.id || customers[0]?.id || "");
   const orders = ordersOf(cust);
   const [order, setOrder] = useState(orders[0]?.id || "");
-  const onCust = (id) => { setCust(id); const os = ordersOf(id); setOrder(os[0]?.id || ""); };
+  const [thread, setThread] = useState("");
+  const threads = orders.find((o) => o.id === order)?.threads || [];
+  const onCust = (id) => { setCust(id); const os = ordersOf(id); setOrder(os[0]?.id || ""); setThread(""); };
+  const onOrder = (id) => { setOrder(id); setThread(""); };
+  const zuordnen = () => { if (!order) return; thread ? onAppend(mail.id, order, thread) : onAssign(mail.id, order); };
 
   return (
     <div className="mailcard">
@@ -28,11 +33,15 @@ function MailTriage({ mail, customers, ordersOf, custByEmail, onAssign, onNew })
       <div className="mailsubj">{mail.betreff}</div>
       <div className="mailbody">{mail.body}</div>
       <div className="mailactions">
-        <select value={cust} onChange={(e) => onCust(e.target.value)}>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-        <select value={order} onChange={(e) => setOrder(e.target.value)} disabled={!orders.length}>
+        <select value={cust} onChange={(e) => onCust(e.target.value)} aria-label="Kunde">{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+        <select value={order} onChange={(e) => onOrder(e.target.value)} disabled={!orders.length} aria-label="Auftrag">
           {orders.length ? orders.map((o) => <option key={o.id} value={o.id}>{o.titel}</option>) : <option value="">— kein Auftrag —</option>}
         </select>
-        <button className="btn sm" disabled={!order} onClick={() => onAssign(mail.id, order)}>Auftrag zuordnen</button>
+        <select value={thread} onChange={(e) => setThread(e.target.value)} disabled={!order} aria-label="Thread">
+          <option value="">— neuer Thread —</option>
+          {threads.map((t) => <option key={t.id} value={t.id}>{t.titel}</option>)}
+        </select>
+        <button className="btn sm" disabled={!order} onClick={zuordnen}>Zuordnen</button>
         <button className="btn ghost sm" onClick={() => onNew(mail.id, cust)}>Neuer Auftrag</button>
       </div>
     </div>
@@ -40,7 +49,7 @@ function MailTriage({ mail, customers, ordersOf, custByEmail, onAssign, onNew })
 }
 
 export default function Inbox() {
-  const { db, custOf, ordersOf, custByEmail, addIncomingMail, assignMailToOrder, assignMailToNewOrder } = useStore();
+  const { db, custOf, ordersOf, custByEmail, addIncomingMail, appendMailToThread, assignMailToOrder, assignMailToNewOrder } = useStore();
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const [sim, setSim] = useState(null); // { from, betreff, body }
@@ -134,7 +143,7 @@ export default function Inbox() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
           {mails.map((m) => (
             <MailTriage key={m.id} mail={m} customers={db.customers} ordersOf={ordersOf} custByEmail={custByEmail}
-              onAssign={assignMailToOrder} onNew={onNew} />
+              onAppend={appendMailToThread} onAssign={assignMailToOrder} onNew={onNew} />
           ))}
         </div>
       )}
@@ -164,14 +173,18 @@ export default function Inbox() {
         ) : (
           <table className="sortable">
             <thead>
-              <tr>{COLS.map((c) => <th key={c.key} className="sortth" style={c.right ? { textAlign: "right" } : null} onClick={() => clickHeader(c.key)}>{c.label}{arrow(c.key)}</th>)}</tr>
+              <tr>{COLS.map((c) => (
+                <th key={c.key} style={c.right ? { textAlign: "right" } : null} aria-sort={sortKey === c.key ? (sortDir === "asc" ? "ascending" : "descending") : "none"}>
+                  <button className="th-sort" onClick={() => clickHeader(c.key)}>{c.label}{arrow(c.key)}</button>
+                </th>
+              ))}</tr>
             </thead>
             <tbody>
               {rows.map((r) => {
                 const ps = PRIO_STYLE[r.prio] || PRIO_STYLE.normal;
                 return (
                   <tr key={r.o.id + r.t.id} className="clickrow" onClick={() => nav("/auftrag/" + r.o.id)}>
-                    <td><div className="name" style={{ fontSize: 14 }}>{r.offen && <span className="reddot" />}{r.thema}</div><div className="meta">{r.vorgang}</div></td>
+                    <td><button className="rowlink" onClick={(e) => { e.stopPropagation(); nav("/auftrag/" + r.o.id); }}>{r.offen && <span className="reddot" />}{r.thema}</button><div className="meta">{r.vorgang}</div></td>
                     <td>{r.kunde}</td>
                     <td><span className="chip" style={{ background: ps.bg, color: ps.fg }}>{r.prio}</span></td>
                     <td className="mono small">{r.erstellt || "—"}</td>

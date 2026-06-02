@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useLocation, useNavigate, matchPath, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { calibStatus, today } from "../data/portal.js";
@@ -7,12 +8,14 @@ export default function Layout() {
   const { persp, isIntern, meCust, setPersp, handlungsbedarf, db, custOf, orderById, setNewAnfrage } = useStore();
   const nav = useNavigate();
   const { pathname } = useLocation();
+  const [q, setQ] = useState("");
 
   // Ohne gewählte Sichtweise zurück zur Login-/Auswahlseite.
   if (!persp) return <Navigate to="/" replace />;
 
   const go = (to) => nav(to);
   const switchView = () => { setPersp(null); nav("/"); };
+  const submitSearch = (e) => { e.preventDefault(); const term = q.trim(); if (term) nav((isIntern ? "/intern" : "/kunde") + "/suche?q=" + encodeURIComponent(term)); };
 
   const overdue = db.geraete.filter((g) => calibStatus(g, today()) === "überfällig").length;
 
@@ -68,16 +71,22 @@ export default function Layout() {
         </aside>
 
         <main className="main">
-          <div className="topbar"><div className="crumb">
-            <a onClick={() => go(homeTo)}>{isIntern ? "Übersicht" : "Meine Aufträge"}</a>
-            {isIntern && crumbCust && <> {" / "} <a onClick={() => go("/intern/kunden/" + crumbCust.id)}>{crumbCust.name}</a></>}
-            {ord && <> {" / "} <span className="cur">{ord.titel}</span></>}
-            {pathname === "/intern/posteingang" && <> {" / "} <span className="cur">Posteingang</span></>}
-            {pathname === "/intern/kalibrierung" && <> {" / "} <span className="cur">Kalibrierung</span></>}
-            {pathname === "/intern/prozess" && <> {" / "} <span className="cur">Prozess</span></>}
-            {pathname === "/kunde/geraete" && <> {" / "} <span className="cur">Meine Geräte</span></>}
-            {pathname === "/kunde/prozess" && <> {" / "} <span className="cur">So läuft's ab</span></>}
-          </div></div>
+          <div className="topbar">
+            <div className="crumb">
+              <a onClick={() => go(homeTo)}>{isIntern ? "Übersicht" : "Meine Aufträge"}</a>
+              {isIntern && crumbCust && <> {" / "} <a onClick={() => go("/intern/kunden/" + crumbCust.id)}>{crumbCust.name}</a></>}
+              {ord && <> {" / "} <span className="cur">{ord.titel}</span></>}
+              {pathname === "/intern/posteingang" && <> {" / "} <span className="cur">Posteingang</span></>}
+              {pathname === "/intern/kalibrierung" && <> {" / "} <span className="cur">Kalibrierung</span></>}
+              {pathname === "/intern/prozess" && <> {" / "} <span className="cur">Prozess</span></>}
+              {pathname.endsWith("/suche") && <> {" / "} <span className="cur">Suche</span></>}
+              {pathname === "/kunde/geraete" && <> {" / "} <span className="cur">Meine Geräte</span></>}
+              {pathname === "/kunde/prozess" && <> {" / "} <span className="cur">So läuft's ab</span></>}
+            </div>
+            <form className="topsearch" onSubmit={submitSearch} role="search">
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Suchen …" aria-label="Suche" />
+            </form>
+          </div>
 
           <div className="content"><Outlet /></div>
         </main>

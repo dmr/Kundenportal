@@ -8,6 +8,7 @@ import CustomerDetail from "./pages/CustomerDetail.jsx";
 import Inbox from "./pages/Inbox.jsx";
 import Kalibrierung from "./pages/Kalibrierung.jsx";
 import Prozess from "./pages/Prozess.jsx";
+import Suche from "./pages/Suche.jsx";
 import KundeHome from "./pages/KundeHome.jsx";
 import Geraete from "./pages/Geraete.jsx";
 import OrderDetail from "./pages/OrderDetail.jsx";
@@ -35,10 +36,12 @@ export default function App() {
         <Route path="/intern/posteingang" element={<InternOnly><Inbox /></InternOnly>} />
         <Route path="/intern/kalibrierung" element={<InternOnly><Kalibrierung /></InternOnly>} />
         <Route path="/intern/prozess" element={<InternOnly><Prozess /></InternOnly>} />
+        <Route path="/intern/suche" element={<InternOnly><Suche /></InternOnly>} />
 
         <Route path="/kunde" element={<KundeOnly><KundeHome /></KundeOnly>} />
         <Route path="/kunde/geraete" element={<KundeOnly><Geraete /></KundeOnly>} />
         <Route path="/kunde/prozess" element={<KundeOnly><Prozess /></KundeOnly>} />
+        <Route path="/kunde/suche" element={<KundeOnly><Suche /></KundeOnly>} />
 
         {/* Auftragsdetail für beide Rollen; Zugriffsschutz in der Seite selbst. */}
         <Route path="/auftrag/:ordId" element={<OrderDetail />} />

@@ -122,6 +122,15 @@ export function StoreProvider({ children }) {
     setDb((d) => ({ ...d, maileingang: [m, ...(d.maileingang || [])] }));
     return { matched: false };
   }
+  // Unzugeordnete Mail an einen bestehenden Thread anhängen (öffnet ihn wieder).
+  function appendMailToThread(mailId, orderId, threadId) {
+    const m = (db.maileingang || []).find((x) => x.id === mailId);
+    if (!m || !orderId || !threadId) return;
+    setDb((d) => ({ ...d,
+      maileingang: d.maileingang.filter((x) => x.id !== mailId),
+      orders: d.orders.map((o) => (o.id !== orderId ? o : { ...o, threads: o.threads.map((t) => (t.id !== threadId ? t : { ...t, geloest: false, geloestAm: null, nachrichten: [...t.nachrichten, mailToMessage(m)] })) })),
+    }));
+  }
   // Unzugeordnete Mail einem bestehenden Auftrag als neuer Thread zuordnen.
   function assignMailToOrder(mailId, orderId) {
     const m = (db.maileingang || []).find((x) => x.id === mailId);
@@ -187,7 +196,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, latestIncoming, handlungsbedarf,
-    custByEmail, addIncomingMail, assignMailToOrder, assignMailToNewOrder,
+    custByEmail, addIncomingMail, appendMailToThread, assignMailToOrder, assignMailToNewOrder,
     sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
