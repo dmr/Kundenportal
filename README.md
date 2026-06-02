@@ -53,6 +53,7 @@ src/
 | `/intern/kunden`, `/intern/kunden/:custId` | Team | Kundenliste / Vorgänge eines Kunden |
 | `/intern/posteingang` | Team | Anfragen & offene Rückfragen |
 | `/intern/kalibrierung` | Team | Kalibrier-Cockpit: Geräte nach Fälligkeit (überfällig/bald/aktuell) |
+| `/intern/prozess` | Team | Ablaufdiagramm des Prozesses über alle Beteiligten (mermaid, lazy) |
 | `/kunde` | Kunde | Meine Aufträge (aktiv + abgeschlossen) |
 | `/kunde/geraete` | Kunde | Meine Geräte: Kalibrierstatus, Zertifikate, Kalibrierung anfragen |
 | `/auftrag/:ordId` | beide | Auftragsdetail (Stepper, Status, Themen, Rückfragen) |

@@ -22,6 +22,7 @@ export default function Layout() {
         { key: "customers", label: "Kunden", short: "Kunden", count: db.customers.length, active: pathname.startsWith("/intern/kunden"), on: () => go("/intern/kunden") },
         { key: "inbox", label: "Posteingang", short: "Post", badge: handlungsbedarf.length, active: pathname === "/intern/posteingang", on: () => go("/intern/posteingang") },
         { key: "calib", label: "Kalibrierung", short: "Kalib.", badge: overdue, active: pathname === "/intern/kalibrierung", on: () => go("/intern/kalibrierung") },
+        { key: "prozess", label: "Prozess", short: "Prozess", active: pathname === "/intern/prozess", on: () => go("/intern/prozess") },
       ]
     : [
         { key: "home", label: "Meine Aufträge", short: "Aufträge", active: pathname === "/kunde", on: () => go("/kunde") },
@@ -72,6 +73,7 @@ export default function Layout() {
             {ord && <> {" / "} <span className="cur">{ord.titel}</span></>}
             {pathname === "/intern/posteingang" && <> {" / "} <span className="cur">Posteingang</span></>}
             {pathname === "/intern/kalibrierung" && <> {" / "} <span className="cur">Kalibrierung</span></>}
+            {pathname === "/intern/prozess" && <> {" / "} <span className="cur">Prozess</span></>}
             {pathname === "/kunde/geraete" && <> {" / "} <span className="cur">Meine Geräte</span></>}
           </div></div>
 
