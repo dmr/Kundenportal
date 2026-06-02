@@ -19,6 +19,7 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
   const [pending, setPending] = useState([]); // [{name, typ, url}]
   const [sent, setSent] = useState(false);
   const [editTitle, setEditTitle] = useState(null);
+  const [collapsed, setCollapsed] = useState(resolved);
   const fileRef = useRef(null);
 
   const commitTitle = () => { if (editTitle && editTitle.trim()) onTitle(editTitle.trim()); setEditTitle(null); };
@@ -43,8 +44,9 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
   };
 
   return (
-    <div className={"thread prio-" + prioritaet + (resolved ? " resolved" : "")}>
+    <div className={"thread prio-" + prioritaet + (resolved ? " resolved" : "") + (collapsed ? " collapsed" : "")}>
       <div className="thread-head">
+        <button className="thread-toggle" onClick={() => setCollapsed((c) => !c)} aria-label={collapsed ? "Ausklappen" : "Einklappen"}>{collapsed ? "▸" : "▾"}</button>
         {editTitle != null ? (
           <input className="thread-title-input" autoFocus value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
@@ -54,6 +56,7 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
           <span className="thread-title">{title}{onTitle && <button className="title-edit" title="Titel ändern" onClick={() => setEditTitle(title)}>✎</button>}</span>
         )}
         <div className="thread-head-right">
+          {collapsed && <span className="muted small">{messages.length} Nachr.</span>}
           {onPriority && (
             <select className="statsel" value={prioritaet} onChange={(e) => onPriority(e.target.value)} title="Priorität">
               {PRIORITIES.map((p) => <option key={p} value={p}>Priorität: {p}</option>)}
@@ -63,7 +66,8 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
         </div>
       </div>
 
-      <div className="thread-body">
+      {!collapsed && (<>
+        <div className="thread-body">
         {messages.length === 0 && <div className="muted small">{emptyText}</div>}
         {messages.map((m, i) => {
           const mine = isIntern ? m.dir === "out" : m.dir === "in";
@@ -103,6 +107,7 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
           </div>
         </div>
       )}
+      </>)}
     </div>
   );
 }

@@ -14,6 +14,7 @@ export default function OrderDetail() {
   const [querying, setQuerying] = useState(false);
   const [queryText, setQueryText] = useState("");
   const [newThread, setNewThread] = useState(false);
+  const [showResolved, setShowResolved] = useState(false);
 
   const ord = orderById(ordId);
   if (!ord) return <Navigate to={isIntern ? "/intern" : "/kunde"} replace />;
@@ -34,6 +35,8 @@ export default function OrderDetail() {
   const posThreads = (pid) => ord.threads.filter((t) => t.positionId === pid);
   const generalThreads = ord.threads.filter((t) => !t.positionId)
     .slice().sort((a, b) => (PRIO_RANK[a.prioritaet] - PRIO_RANK[b.prioritaet]) || (Number(threadOpen(b)) - Number(threadOpen(a))));
+  const resolvedCount = generalThreads.filter((t) => t.geloest).length;
+  const visibleThreads = showResolved ? generalThreads : generalThreads.filter((t) => !t.geloest);
 
   // Rückfrage zum Angebot: als eigener Thread + Angebot in „in Klärung" – kein „Ablehnen".
   const sendQuery = () => {
@@ -198,15 +201,18 @@ export default function OrderDetail() {
       )}
 
       <div style={{ marginTop: 24 }}>
-        <div className="sec" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div className="sec" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
           <span>{isIntern ? "Kommunikation" : "Rückfragen & weitere Punkte"}</span>
-          {!newThread && <button className="btn ghost sm" onClick={() => setNewThread(true)}>+ Neues Thema</button>}
+          <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {resolvedCount > 0 && <button className="linkbtn" onClick={() => setShowResolved((v) => !v)}>{showResolved ? "Gelöste ausblenden" : "Gelöste anzeigen (" + resolvedCount + ")"}</button>}
+            {!newThread && <button className="btn ghost sm" onClick={() => setNewThread(true)}>+ Neues Thema</button>}
+          </span>
         </div>
         {!isIntern && <div className="muted small" style={{ marginBottom: 10 }}>Eröffnen Sie je Anliegen ein Thema, hängen Sie Screenshots/PDFs an und markieren Sie es als gelöst, wenn es passt.</div>}
         {newThread && <NewThreadForm onCancel={() => setNewThread(false)} onCreate={(d) => { createThread(ord.id, { ...d, positionId: null }, d.text); setNewThread(false); }} />}
-        {generalThreads.length === 0 && !newThread && <div className="card"><div className="empty">Noch keine Themen. Eröffnen Sie eines mit „+ Neues Thema".</div></div>}
+        {visibleThreads.length === 0 && !newThread && <div className="card"><div className="empty">{generalThreads.length === 0 ? "Noch keine Themen — legen Sie über + Neues Thema eines an." : "Keine offenen Themen — alle erledigt."}</div></div>}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {generalThreads.map((t) => (
+          {visibleThreads.map((t) => (
             <Thread
               key={t.id}
               title={t.titel}
