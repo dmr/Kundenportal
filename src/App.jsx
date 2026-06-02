@@ -38,6 +38,7 @@ export default function App() {
 
         <Route path="/kunde" element={<KundeOnly><KundeHome /></KundeOnly>} />
         <Route path="/kunde/geraete" element={<KundeOnly><Geraete /></KundeOnly>} />
+        <Route path="/kunde/prozess" element={<KundeOnly><Prozess /></KundeOnly>} />
 
         {/* Auftragsdetail für beide Rollen; Zugriffsschutz in der Seite selbst. */}
         <Route path="/auftrag/:ordId" element={<OrderDetail />} />

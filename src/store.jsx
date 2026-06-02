@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { SEED, ME, today, applyAcceptOffer, applyOfferStatus, applyHistorieEntry, threadOpen } from "./data/portal.js";
+import { SEED, ME, today, applyAcceptOffer, applyOfferStatus, applyHistorieEntry, threadOpen, matchThreadForMail, stripSubject, customerByEmail } from "./data/portal.js";
 
 /* Zentraler Store (Prototyp). Hält DB-Daten, die aktuelle Sichtweise (persp)
    sowie alle Mutationen. Persistiert in localStorage (überlebt Reload).
@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 10;
+const STORAGE_VERSION = 11;
 
 function loadPersisted() {
   try {
@@ -105,6 +105,45 @@ export function StoreProvider({ children }) {
     const tt = (titel || "").trim(); if (!tt) return;
     setThread(orderId, threadId, (t) => ({ ...t, titel: tt }));
   }
+
+  // ---- Geteiltes Postfach (service@) -------------------------------------
+  const custByEmail = (from) => customerByEmail(db.customers, from);
+  function mailToMessage(m) { return { dir: "in", from: m.from, datum: m.datum, text: m.body, anhaenge: m.anhaenge || [] }; }
+  // Eingehende Mail: passt der Betreff zu einem Thread → als Antwort einsortieren,
+  // sonst landet sie unzugeordnet im Postfach.
+  function addIncomingMail({ from, betreff, body, anhaenge }) {
+    const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+    const m = { id: "m" + Date.now(), from: from || "extern@unbekannt", betreff: betreff || "(kein Betreff)", body: body || "", datum: stamp, anhaenge: anhaenge || [] };
+    const match = matchThreadForMail(db.orders, m);
+    if (match) {
+      setThread(match.orderId, match.threadId, (t) => ({ ...t, geloest: false, geloestAm: null, nachrichten: [...t.nachrichten, mailToMessage(m)] }));
+      return { matched: true, orderId: match.orderId };
+    }
+    setDb((d) => ({ ...d, maileingang: [m, ...(d.maileingang || [])] }));
+    return { matched: false };
+  }
+  // Unzugeordnete Mail einem bestehenden Auftrag als neuer Thread zuordnen.
+  function assignMailToOrder(mailId, orderId) {
+    const m = (db.maileingang || []).find((x) => x.id === mailId);
+    if (!m || !orderId) return;
+    setDb((d) => ({ ...d,
+      maileingang: d.maileingang.filter((x) => x.id !== mailId),
+      orders: d.orders.map((o) => (o.id !== orderId ? o : { ...o, threads: [...o.threads, { id: "th" + Date.now(), titel: stripSubject(m.betreff) || "E-Mail", prioritaet: "normal", positionId: null, geloest: false, nachrichten: [mailToMessage(m)] }] })),
+    }));
+  }
+  // Unzugeordnete Mail zu einem neuen Auftrag (Anfrage) machen; gibt die id zurück.
+  function assignMailToNewOrder(mailId, customerId) {
+    const m = (db.maileingang || []).find((x) => x.id === mailId);
+    if (!m || !customerId) return null;
+    const id = "n" + Date.now();
+    setDb((d) => ({ ...d,
+      maileingang: d.maileingang.filter((x) => x.id !== mailId),
+      orders: [{ id, customerId, titel: stripSubject(m.betreff) || "Neue Anfrage", tlw: null, auftragsNr: null, typ: "Sonstiges", geraetId: null, stage: "anfrage", datum: today(),
+        angebot: null, bestellung: null, lieferschein: null, internePlanung: [],
+        threads: [{ id: "th" + Date.now(), titel: stripSubject(m.betreff) || "Anfrage", prioritaet: "normal", positionId: null, geloest: false, nachrichten: [mailToMessage(m)] }] }, ...d.orders],
+    }));
+    return id;
+  }
   // Angebotsfreigabe (alles-oder-nichts) über pure Transform aus portal.js.
   function acceptOffer(orderId) { mut(orderId, applyAcceptOffer); }
   // Angebotsstatus setzen ("offen" / "in Klärung").
@@ -148,6 +187,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, latestIncoming, handlungsbedarf,
+    custByEmail, addIncomingMail, assignMailToOrder, assignMailToNewOrder,
     sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

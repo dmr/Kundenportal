@@ -2,7 +2,25 @@ import { describe, it, expect } from "vitest";
 import {
   suggestStage, applyAcceptOffer, applyOfferStatus,
   addMonths, calibNextDue, calibStatus, applyHistorieEntry, threadOpen,
+  matchThreadForMail, customerByEmail,
 } from "./portal.js";
+
+describe("matchThreadForMail", () => {
+  const orders = [{ id: "o1", threads: [{ id: "th1", titel: "Liefertermin 5069" }] }];
+  it("matcht Betreff auf Thread-Titel (auch mit AW:)", () => {
+    expect(matchThreadForMail(orders, { betreff: "AW: Liefertermin 5069" })).toEqual({ orderId: "o1", threadId: "th1" });
+  });
+  it("ohne Treffer → null", () => {
+    expect(matchThreadForMail(orders, { betreff: "Ganz neues Thema" })).toBe(null);
+  });
+});
+
+describe("customerByEmail", () => {
+  const cs = [{ id: "c1", email: "einkauf@a.de" }, { id: "c2", email: "disp@b.de" }];
+  it("exakte Adresse", () => expect(customerByEmail(cs, "einkauf@a.de").id).toBe("c1"));
+  it("gleiche Domain", () => expect(customerByEmail(cs, "qs@a.de").id).toBe("c1"));
+  it("unbekannt → null", () => expect(customerByEmail(cs, "x@z.de")).toBe(null));
+});
 
 describe("threadOpen", () => {
   it("offen, wenn nicht gelöst und letzte Nachricht eingehend", () => {

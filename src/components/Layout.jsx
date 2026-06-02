@@ -20,13 +20,14 @@ export default function Layout() {
     ? [
         { key: "home", label: "Übersicht", short: "Übersicht", active: pathname === "/intern", on: () => go("/intern") },
         { key: "customers", label: "Kunden", short: "Kunden", count: db.customers.length, active: pathname.startsWith("/intern/kunden"), on: () => go("/intern/kunden") },
-        { key: "inbox", label: "Posteingang", short: "Post", badge: handlungsbedarf.length, active: pathname === "/intern/posteingang", on: () => go("/intern/posteingang") },
+        { key: "inbox", label: "Posteingang", short: "Post", badge: handlungsbedarf.length + (db.maileingang?.length || 0), active: pathname === "/intern/posteingang", on: () => go("/intern/posteingang") },
         { key: "calib", label: "Kalibrierung", short: "Kalib.", badge: overdue, active: pathname === "/intern/kalibrierung", on: () => go("/intern/kalibrierung") },
         { key: "prozess", label: "Prozess", short: "Prozess", active: pathname === "/intern/prozess", on: () => go("/intern/prozess") },
       ]
     : [
         { key: "home", label: "Meine Aufträge", short: "Aufträge", active: pathname === "/kunde", on: () => go("/kunde") },
         { key: "geraete", label: "Meine Geräte", short: "Geräte", active: pathname === "/kunde/geraete", on: () => go("/kunde/geraete") },
+        { key: "prozess", label: "So läuft's ab", short: "Ablauf", active: pathname === "/kunde/prozess", on: () => go("/kunde/prozess") },
         { key: "new", label: "Neue Anfrage", short: "Neu", accent: true, on: () => setNewAnfrage({ titel: "", typ: "Kalibrierung", text: "", geraetId: null }) },
       ];
 
@@ -75,6 +76,7 @@ export default function Layout() {
             {pathname === "/intern/kalibrierung" && <> {" / "} <span className="cur">Kalibrierung</span></>}
             {pathname === "/intern/prozess" && <> {" / "} <span className="cur">Prozess</span></>}
             {pathname === "/kunde/geraete" && <> {" / "} <span className="cur">Meine Geräte</span></>}
+            {pathname === "/kunde/prozess" && <> {" / "} <span className="cur">So läuft's ab</span></>}
           </div></div>
 
           <div className="content"><Outlet /></div>

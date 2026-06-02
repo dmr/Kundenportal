@@ -97,6 +97,31 @@ export function threadOpen(t) {
   return !t.geloest && !!last && last.dir === "in";
 }
 
+// Betreff von Re:/AW:/Fwd:-Präfixen befreien.
+export function stripSubject(s) {
+  return (s || "").replace(/^((re|aw|fwd|wg|antwort)\s*:\s*)+/i, "").trim();
+}
+// Eingehende Mail einem Thread zuordnen: Betreff enthält einen Thread-Titel.
+export function matchThreadForMail(orders, mail) {
+  const subj = stripSubject(mail.betreff).toLowerCase();
+  if (subj.length < 4) return null;
+  for (const o of orders) {
+    for (const t of o.threads) {
+      const titel = (t.titel || "").toLowerCase();
+      if (titel.length > 3 && subj.includes(titel)) return { orderId: o.id, threadId: t.id };
+    }
+  }
+  return null;
+}
+// Absender einem Kunden zuordnen (exakte Adresse, sonst gleiche Domain).
+export function customerByEmail(customers, from) {
+  const f = (from || "").toLowerCase();
+  const exact = customers.find((c) => c.email.toLowerCase() === f);
+  if (exact) return exact;
+  const dom = f.split("@")[1];
+  return (dom && customers.find((c) => c.email.toLowerCase().split("@")[1] === dom)) || null;
+}
+
 export const STATUS_STYLE = {
   "offen": { bg: "#F3E7CE", fg: "#8A5A00" }, "angenommen": { bg: "#DCE7DC", fg: "#3F6B3F" },
   "in Klärung": { bg: "#DEE6F2", fg: "#1D4E89" },
@@ -268,5 +293,10 @@ export const SEED = {
         { datum: "2025-02-15", art: "kalibrierung", titel: "Erstkalibrierung", ergebnis: "in Toleranz", zertifikat: "KAL-2025-0210" },
         { datum: "2025-02-10", art: "auslieferung", titel: "Gerät ausgeliefert", version: "5.27.4" },
       ] },
+  ],
+  // Geteiltes Postfach (service@): noch nicht zugeordnete eingehende E-Mails.
+  maileingang: [
+    { id: "m1", from: "qs@igbt-modulhersteller-a.de", betreff: "Frage zum Kalibrierintervall TLW 800", datum: "2026-06-01 08:12", body: "Können wir das Kalibrierintervall des TLW 800 auf 24 Monate verlängern?", anhaenge: [] },
+    { id: "m2", from: "labor@thyristor-hersteller-b.de", betreff: "Neue Anfrage: Wartung benötigt", datum: "2026-06-01 09:30", body: "Wir benötigen kurzfristig eine Wartung. Bitte um Rückmeldung.", anhaenge: [] },
   ],
 };

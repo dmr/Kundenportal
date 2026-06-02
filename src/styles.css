@@ -135,6 +135,19 @@ table.sortable td{vertical-align:top;}
 .clickrow:hover td{background:var(--accent-soft);}
 .reddot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:7px;vertical-align:middle;}
 .lane-dot{width:12px;height:12px;flex:0 0 12px;border-radius:50%;}
+/* Filterleiste & geteiltes Postfach */
+.filterbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;}
+.filterbar select{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.seg button{font:inherit;font-size:13px;padding:7px 12px;border:none;background:#fff;cursor:pointer;color:var(--ink);border-right:1px solid var(--line);}
+.seg button:last-child{border-right:none;}
+.seg button.on{background:var(--accent);color:#fff;}
+.mailcard{border:1px solid var(--line);border-left:3px solid var(--intern);border-radius:10px;background:var(--panel);padding:14px 16px;}
+.mailhead{display:flex;justify-content:space-between;gap:10px;color:var(--muted);margin-bottom:4px;}
+.mailsubj{font-weight:600;font-size:14px;margin-bottom:4px;}
+.mailbody{font-size:14px;margin-bottom:10px;}
+.mailactions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.mailactions select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;}
 .mermaid-wrap{display:flex;justify-content:center;}
 .mermaid-wrap svg{max-width:100%;height:auto;}
 .tl{list-style:none;} .tli{display:flex;gap:14px;padding:14px 4px;border-bottom:1px solid var(--line);} .tli:last-child{border-bottom:none;}

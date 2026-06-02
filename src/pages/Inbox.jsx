@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { threadOpen, PRIO_RANK, PRIO_STYLE } from "../data/portal.js";
 
@@ -14,78 +14,164 @@ const COLS = [
   { key: "geloestAm", label: "Erledigt am" },
 ];
 
-export default function Inbox() {
-  const { db, custOf } = useStore();
-  const nav = useNavigate();
-  const [sort, setSort] = useState({ key: "prio", dir: "asc" });
+// Triage einer unzugeordneten E-Mail: Kunde + Auftrag wählen, oder neuen Auftrag anlegen.
+function MailTriage({ mail, customers, ordersOf, custByEmail, onAssign, onNew }) {
+  const matched = custByEmail(mail.from);
+  const [cust, setCust] = useState(matched?.id || customers[0]?.id || "");
+  const orders = ordersOf(cust);
+  const [order, setOrder] = useState(orders[0]?.id || "");
+  const onCust = (id) => { setCust(id); const os = ordersOf(id); setOrder(os[0]?.id || ""); };
 
-  const rows = [];
+  return (
+    <div className="mailcard">
+      <div className="mailhead"><span className="mono small">✉ {mail.from}</span><span className="mono small">{mail.datum}</span></div>
+      <div className="mailsubj">{mail.betreff}</div>
+      <div className="mailbody">{mail.body}</div>
+      <div className="mailactions">
+        <select value={cust} onChange={(e) => onCust(e.target.value)}>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+        <select value={order} onChange={(e) => setOrder(e.target.value)} disabled={!orders.length}>
+          {orders.length ? orders.map((o) => <option key={o.id} value={o.id}>{o.titel}</option>) : <option value="">— kein Auftrag —</option>}
+        </select>
+        <button className="btn sm" disabled={!order} onClick={() => onAssign(mail.id, order)}>Auftrag zuordnen</button>
+        <button className="btn ghost sm" onClick={() => onNew(mail.id, cust)}>Neuer Auftrag</button>
+      </div>
+    </div>
+  );
+}
+
+export default function Inbox() {
+  const { db, custOf, ordersOf, custByEmail, addIncomingMail, assignMailToOrder, assignMailToNewOrder } = useStore();
+  const nav = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const [sim, setSim] = useState(null); // { from, betreff, body }
+  const [simResult, setSimResult] = useState("");
+
+  // ---- Filter & Sortierung leben in der URL (teil-/bookmarkbar) -----------
+  const fStatus = params.get("status") || "alle";
+  const fPrio = params.get("prio") || "alle";
+  const fKunde = params.get("kunde") || "alle";
+  const sortKey = params.get("sort") || "prio";
+  const sortDir = params.get("dir") || "asc";
+
+  const setParam = (patch) => setParams((prev) => {
+    const n = new URLSearchParams(prev);
+    Object.entries(patch).forEach(([k, v]) => { if (!v || v === "alle") n.delete(k); else n.set(k, v); });
+    return n;
+  }, { replace: true });
+
+  const clickHeader = (key) => setParam(sortKey === key ? { sort: key, dir: sortDir === "asc" ? "desc" : "asc" } : { sort: key, dir: "asc" });
+  const arrow = (key) => (sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "");
+
+  const mails = db.maileingang || [];
+
+  let rows = [];
   db.orders.forEach((o) => o.threads.forEach((t) => {
     rows.push({
-      o, t,
-      thema: t.titel,
-      vorgang: o.titel,
+      o, t, thema: t.titel, vorgang: o.titel,
       kunde: custOf(o.customerId)?.name || "",
-      prio: t.prioritaet,
-      prioRank: PRIO_RANK[t.prioritaet] ?? 1,
+      prio: t.prioritaet, prioRank: PRIO_RANK[t.prioritaet] ?? 1,
       erstellt: t.nachrichten[0]?.datum || "",
       antworten: t.nachrichten.length,
       anhaenge: t.nachrichten.reduce((s, m) => s + (m.anhaenge?.length || 0), 0),
-      offen: threadOpen(t),
-      geloest: !!t.geloest,
-      geloestAm: t.geloestAm || "",
+      offen: threadOpen(t), geloest: !!t.geloest, geloestAm: t.geloestAm || "",
     });
   }));
+
+  rows = rows.filter((r) =>
+    (fStatus === "alle" || (fStatus === "offen" ? !r.geloest : r.geloest)) &&
+    (fPrio === "alle" || r.prio === fPrio) &&
+    (fKunde === "alle" || r.o.customerId === fKunde));
 
   const val = (r, key) => ({
     thema: r.thema.toLowerCase(), kunde: r.kunde.toLowerCase(), prio: r.prioRank,
     erstellt: r.erstellt, antworten: r.antworten, anhaenge: r.anhaenge,
     status: r.geloest ? 1 : 0, geloestAm: r.geloestAm,
   }[key]);
-
-  const sorted = rows.sort((a, b) => {
-    const va = val(a, sort.key), vb = val(b, sort.key);
+  rows.sort((a, b) => {
+    const va = val(a, sortKey), vb = val(b, sortKey);
     let c = va < vb ? -1 : va > vb ? 1 : 0;
-    c = sort.dir === "asc" ? c : -c;
+    c = sortDir === "asc" ? c : -c;
     if (c !== 0) return c;
-    // Tiebreak: offene zuerst, dann neueste.
     if (a.offen !== b.offen) return a.offen ? -1 : 1;
     return a.erstellt < b.erstellt ? 1 : a.erstellt > b.erstellt ? -1 : 0;
   });
 
-  const clickHeader = (key) => setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" }));
-  const arrow = (key) => (sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "");
+  const submitSim = () => {
+    const res = addIncomingMail(sim || {});
+    setSimResult(res.matched ? "✓ Automatisch einem Thread als Antwort zugeordnet." : "→ Nicht zugeordnet — im Postfach zur Zuordnung.");
+    setSim(null);
+  };
+  const onNew = (mailId, custId) => { const id = assignMailToNewOrder(mailId, custId); if (id) nav("/auftrag/" + id); };
 
-  const offenCount = rows.filter((r) => r.offen).length;
+  const filtersActive = fStatus !== "alle" || fPrio !== "alle" || fKunde !== "alle";
 
   return (
     <>
       <div className="h1 serif">Posteingang</div>
-      <div className="lede">Alle Themen über alle Kunden · {offenCount} offen. Spalten zum Sortieren anklicken.</div>
+      <div className="lede">Geteiltes Postfach service@ und alle Themen über alle Kunden.</div>
+
+      {/* Geteiltes Postfach: unzugeordnete eingehende E-Mails */}
+      <div className="sec" style={{ marginTop: 0, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span>Maileingang (service@) · {mails.length} nicht zugeordnet</span>
+        {!sim && <button className="btn ghost sm" onClick={() => { setSim({ from: "", betreff: "", body: "" }); setSimResult(""); }}>Eingehende Mail simulieren</button>}
+      </div>
+      {sim && (
+        <div className="frm" style={{ marginBottom: 14 }}>
+          <div className="rowf">
+            <input placeholder="Absender (z. B. einkauf@igbt-modulhersteller-a.de)" value={sim.from} onChange={(e) => setSim({ ...sim, from: e.target.value })} />
+            <input placeholder="Betreff (z. B. AW: Liefertermin 5069)" value={sim.betreff} onChange={(e) => setSim({ ...sim, betreff: e.target.value })} />
+          </div>
+          <textarea placeholder="Nachricht …" style={{ minHeight: 60 }} value={sim.body} onChange={(e) => setSim({ ...sim, body: e.target.value })} />
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn sm" onClick={submitSim}>Mail empfangen</button>
+            <button className="btn ghost sm" onClick={() => setSim(null)}>Abbrechen</button>
+          </div>
+          <div className="note" style={{ fontStyle: "normal" }}>Enthält der Betreff einen Thread-Titel (z. B. „Liefertermin 5069"), wird die Mail automatisch als Antwort einsortiert — sonst landet sie unten zur Zuordnung.</div>
+        </div>
+      )}
+      {simResult && <div className="muted small" style={{ marginBottom: 12 }}>{simResult}</div>}
+      {mails.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+          {mails.map((m) => (
+            <MailTriage key={m.id} mail={m} customers={db.customers} ordersOf={ordersOf} custByEmail={custByEmail}
+              onAssign={assignMailToOrder} onNew={onNew} />
+          ))}
+        </div>
+      )}
+
+      {/* Filterleiste (Status/Priorität/Kunde) – Auswahl steht in der URL */}
+      <div className="sec">Themen</div>
+      <div className="filterbar">
+        <div className="seg">
+          {["alle", "offen", "erledigt"].map((s) => (
+            <button key={s} className={fStatus === s ? "on" : ""} onClick={() => setParam({ status: s })}>{s === "alle" ? "Alle" : s === "offen" ? "Offen" : "Erledigt"}</button>
+          ))}
+        </div>
+        <select value={fPrio} onChange={(e) => setParam({ prio: e.target.value })}>
+          <option value="alle">Priorität: alle</option>
+          <option value="hoch">hoch</option><option value="normal">normal</option><option value="niedrig">niedrig</option>
+        </select>
+        <select value={fKunde} onChange={(e) => setParam({ kunde: e.target.value })}>
+          <option value="alle">Kunde: alle</option>
+          {db.customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        {filtersActive && <button className="linkbtn" onClick={() => setParam({ status: "", prio: "", kunde: "" })}>Filter zurücksetzen</button>}
+      </div>
 
       <div className="card" style={{ overflowX: "auto" }}>
         {rows.length === 0 ? (
-          <div className="empty">Keine Themen.</div>
+          <div className="empty">Keine Themen für diese Filter.</div>
         ) : (
           <table className="sortable">
             <thead>
-              <tr>
-                {COLS.map((c) => (
-                  <th key={c.key} className="sortth" style={c.right ? { textAlign: "right" } : null} onClick={() => clickHeader(c.key)}>
-                    {c.label}{arrow(c.key)}
-                  </th>
-                ))}
-              </tr>
+              <tr>{COLS.map((c) => <th key={c.key} className="sortth" style={c.right ? { textAlign: "right" } : null} onClick={() => clickHeader(c.key)}>{c.label}{arrow(c.key)}</th>)}</tr>
             </thead>
             <tbody>
-              {sorted.map((r) => {
+              {rows.map((r) => {
                 const ps = PRIO_STYLE[r.prio] || PRIO_STYLE.normal;
                 return (
                   <tr key={r.o.id + r.t.id} className="clickrow" onClick={() => nav("/auftrag/" + r.o.id)}>
-                    <td>
-                      <div className="name" style={{ fontSize: 14 }}>{r.offen && <span className="reddot" />}{r.thema}</div>
-                      <div className="meta">{r.vorgang}</div>
-                    </td>
+                    <td><div className="name" style={{ fontSize: 14 }}>{r.offen && <span className="reddot" />}{r.thema}</div><div className="meta">{r.vorgang}</div></td>
                     <td>{r.kunde}</td>
                     <td><span className="chip" style={{ background: ps.bg, color: ps.fg }}>{r.prio}</span></td>
                     <td className="mono small">{r.erstellt || "—"}</td>

@@ -51,11 +51,12 @@ src/
 | `/` | — | Pseudo-Login (Sichtweise wählen) |
 | `/intern` | Team | Übersicht: KPIs, Handlungsbedarf, aktive Vorgänge |
 | `/intern/kunden`, `/intern/kunden/:custId` | Team | Kundenliste / Vorgänge eines Kunden |
-| `/intern/posteingang` | Team | Anfragen & offene Rückfragen |
+| `/intern/posteingang` | Team | Geteiltes Postfach (service@) + sortierbare Thread-Tabelle; Filter/Sortierung in der URL (`?status=…&prio=…&kunde=…&sort=…`) |
 | `/intern/kalibrierung` | Team | Kalibrier-Cockpit: Geräte nach Fälligkeit (überfällig/bald/aktuell) |
 | `/intern/prozess` | Team | Ablaufdiagramm des Prozesses über alle Beteiligten (mermaid, lazy) |
 | `/kunde` | Kunde | Meine Aufträge (aktiv + abgeschlossen) |
 | `/kunde/geraete` | Kunde | Meine Geräte: Kalibrierstatus, Zertifikate, Kalibrierung anfragen |
+| `/kunde/prozess` | Kunde | „So läuft Ihr Auftrag ab" – Ablauf + aktueller Stand des Vorgangs |
 | `/auftrag/:ordId` | beide | Auftragsdetail (Stepper, Status, Themen, Rückfragen) |
 
 ### Kalibrierungsmanagement
