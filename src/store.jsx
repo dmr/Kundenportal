@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 9;
+const STORAGE_VERSION = 10;
 
 function loadPersisted() {
   try {
@@ -99,8 +99,12 @@ export function StoreProvider({ children }) {
     mut(orderId, (o) => ({ ...o, threads: [...o.threads, { id, titel: titel?.trim() || "Thema", prioritaet: prioritaet || "normal", positionId: positionId || null, geloest: false, nachrichten }] }));
     return id;
   }
-  function setThreadResolved(orderId, threadId, val) { setThread(orderId, threadId, (t) => ({ ...t, geloest: val })); }
+  function setThreadResolved(orderId, threadId, val) { setThread(orderId, threadId, (t) => ({ ...t, geloest: val, geloestAm: val ? today() : null })); }
   function setThreadPriority(orderId, threadId, val) { setThread(orderId, threadId, (t) => ({ ...t, prioritaet: val })); }
+  function setThreadTitle(orderId, threadId, titel) {
+    const tt = (titel || "").trim(); if (!tt) return;
+    setThread(orderId, threadId, (t) => ({ ...t, titel: tt }));
+  }
   // Angebotsfreigabe (alles-oder-nichts) über pure Transform aus portal.js.
   function acceptOffer(orderId) { mut(orderId, applyAcceptOffer); }
   // Angebotsstatus setzen ("offen" / "in Klärung").
@@ -144,7 +148,7 @@ export function StoreProvider({ children }) {
   const value = {
     db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, latestIncoming, handlungsbedarf,
-    sendThreadMsg, createThread, setThreadResolved, setThreadPriority, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
+    sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
   };
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

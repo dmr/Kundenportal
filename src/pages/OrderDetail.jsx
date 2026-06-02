@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
-import { STAGES, STATI, stageIdx, suggestStage, threadOpen, parseEUR, fmtEUR } from "../data/portal.js";
+import { STAGES, STATI, stageIdx, suggestStage, threadOpen, PRIO_RANK, parseEUR, fmtEUR } from "../data/portal.js";
 import { Status, Stepper, clickable } from "../components/ui.jsx";
 import PositionSheet from "../components/PositionSheet.jsx";
 import Thread from "../components/Thread.jsx";
 import NewThreadForm from "../components/NewThreadForm.jsx";
 
-const PRIO_RANK = { hoch: 0, normal: 1, niedrig: 2 };
-
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
+  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
   const [querying, setQuerying] = useState(false);
   const [queryText, setQueryText] = useState("");
@@ -216,6 +214,7 @@ export default function OrderDetail() {
               resolved={t.geloest}
               prioritaet={t.prioritaet}
               onPriority={(v) => setThreadPriority(ord.id, t.id, v)}
+              onTitle={(v) => setThreadTitle(ord.id, t.id, v)}
               onToggleResolved={() => setThreadResolved(ord.id, t.id, !t.geloest)}
               onSend={(text, anh) => sendThreadMsg(ord.id, t.id, text, anh)}
               placeholder={isIntern ? "Antwort schreiben …" : "Nachricht schreiben …"}

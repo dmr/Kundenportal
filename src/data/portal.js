@@ -85,6 +85,7 @@ export function applyHistorieEntry(g, entry) {
 
 /* ---- Kommunikations-Threads --------------------------------------------- */
 export const PRIORITIES = ["niedrig", "normal", "hoch"];
+export const PRIO_RANK = { hoch: 0, normal: 1, niedrig: 2 };
 export const PRIO_STYLE = {
   niedrig: { bg: "#EDE6D7", fg: "#7A6F5C" },
   normal: { bg: "#DEE6F2", fg: "#1D4E89" },
@@ -140,7 +141,7 @@ export const SEED = {
         { id: "th1", titel: "Liefertermin 5069", prioritaet: "hoch", geloest: false, nachrichten: [
           { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-19 09:14", text: "Können Sie den Liefertermin auf KW 22 vorziehen?" },
           { dir: "out", from: ME, datum: "2026-05-19 11:02", text: "KW 22 ist machbar, wir bestätigen Mittwoch." } ] },
-        { id: "th2", positionId: "p1", titel: "Rückfrage: Transport", prioritaet: "normal", geloest: true, nachrichten: [
+        { id: "th2", positionId: "p1", titel: "Rückfrage: Transport", prioritaet: "normal", geloest: true, geloestAm: "2026-05-18", nachrichten: [
           { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-05-18 10:02", text: "Brauchen Sie für die Entladung eine Hebebühne vor Ort?", anhaenge: [{ name: "Anlieferung_vor_Ort.jpg", typ: "bild", url: "products/tlw763.jpg" }] },
           { dir: "out", from: ME, datum: "2026-05-18 11:20", text: "Nein, wir bringen eine mobile Hebebühne mit." } ] } ],
     },
@@ -180,7 +181,7 @@ export const SEED = {
       lieferschein: { nr: "LS-89770", datum: "2026-04-28", status: "zugestellt" },
       internePlanung: [],
       threads: [
-        { id: "th1", titel: "Empfang bestätigt", prioritaet: "niedrig", geloest: true, nachrichten: [
+        { id: "th1", titel: "Empfang bestätigt", prioritaet: "niedrig", geloest: true, geloestAm: "2026-04-29", nachrichten: [
           { dir: "in", from: "disposition@thyristor-hersteller-b.de", datum: "2026-04-29 14:20", text: "Ware ist eingetroffen, vielen Dank." } ] } ],
     },
     {
@@ -196,7 +197,7 @@ export const SEED = {
       lieferschein: { nr: "LS-89610", datum: "2026-03-14", status: "zugestellt" },
       internePlanung: [],
       threads: [
-        { id: "th1", titel: "Wartung erledigt", prioritaet: "niedrig", geloest: true, nachrichten: [
+        { id: "th1", titel: "Wartung erledigt", prioritaet: "niedrig", geloest: true, geloestAm: "2026-03-15", nachrichten: [
           { dir: "in", from: "einkauf@igbt-modulhersteller-a.de", datum: "2026-03-15 08:30", text: "Alles bestens, danke für die schnelle Abwicklung." } ] } ],
     },
     {
@@ -226,7 +227,7 @@ export const SEED = {
       lieferschein: { nr: "LS-88905", datum: "2025-02-16", status: "zugestellt" },
       internePlanung: [],
       threads: [
-        { id: "th1", titel: "Kalibrierzertifikat", prioritaet: "niedrig", geloest: true, nachrichten: [
+        { id: "th1", titel: "Kalibrierzertifikat", prioritaet: "niedrig", geloest: true, geloestAm: "2025-02-16", nachrichten: [
           { dir: "out", from: ME, datum: "2025-02-16 10:00", text: "Anbei das Kalibrierzertifikat zu TLW 813.", anhaenge: [{ name: "Kalibrierzertifikat_TLW813.pdf", typ: "pdf", url: "sample/zertifikat.pdf" }] } ] } ],
     },
     {

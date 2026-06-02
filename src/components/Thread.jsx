@@ -13,12 +13,15 @@ function Attachment({ a }) {
 
 /* Konversations-Thread: zusammenhängend, mit Priorität und „als gelöst markieren".
    Nachrichten können Bilder/PDFs als Anhang tragen. */
-export default function Thread({ title, messages, resolved, prioritaet = "normal", onToggleResolved, onPriority, onSend, placeholder, emptyText = "Noch keine Nachrichten." }) {
+export default function Thread({ title, messages, resolved, prioritaet = "normal", onToggleResolved, onPriority, onTitle, onSend, placeholder, emptyText = "Noch keine Nachrichten." }) {
   const { isIntern } = useStore();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState([]); // [{name, typ, url}]
   const [sent, setSent] = useState(false);
+  const [editTitle, setEditTitle] = useState(null);
   const fileRef = useRef(null);
+
+  const commitTitle = () => { if (editTitle && editTitle.trim()) onTitle(editTitle.trim()); setEditTitle(null); };
 
   const onFiles = (e) => {
     [...e.target.files].forEach((f) => {
@@ -42,7 +45,14 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
   return (
     <div className={"thread prio-" + prioritaet + (resolved ? " resolved" : "")}>
       <div className="thread-head">
-        <span className="thread-title">{title}</span>
+        {editTitle != null ? (
+          <input className="thread-title-input" autoFocus value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onBlur={commitTitle}
+            onKeyDown={(e) => { if (e.key === "Enter") commitTitle(); if (e.key === "Escape") setEditTitle(null); }} />
+        ) : (
+          <span className="thread-title">{title}{onTitle && <button className="title-edit" title="Titel ändern" onClick={() => setEditTitle(title)}>✎</button>}</span>
+        )}
         <div className="thread-head-right">
           {onPriority && (
             <select className="statsel" value={prioritaet} onChange={(e) => onPriority(e.target.value)} title="Priorität">

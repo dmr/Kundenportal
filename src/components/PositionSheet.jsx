@@ -8,7 +8,7 @@ import NewThreadForm from "./NewThreadForm.jsx";
 /* Positions-Detail als Modal/Bottom-Sheet: Beschreibung, Teilaufgaben (rollenabhängig
    sichtbar/bearbeitbar) und Rückfrage-Threads zu dieser Position. */
 export default function PositionSheet({ ord, pos, onClose }) {
-  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendThreadMsg, createThread, setThreadResolved, setThreadPriority } = useStore();
+  const { isIntern, vTasks, setTaskStatus, addPositionTask, sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle } = useStore();
   const [taskForm, setTaskForm] = useState(null);
   const [newThread, setNewThread] = useState(false);
   const posThreads = ord.threads.filter((t) => t.positionId === pos.id);
@@ -74,6 +74,7 @@ export default function PositionSheet({ ord, pos, onClose }) {
                 resolved={t.geloest}
                 prioritaet={t.prioritaet}
                 onPriority={(v) => setThreadPriority(ord.id, t.id, v)}
+                onTitle={(v) => setThreadTitle(ord.id, t.id, v)}
                 onToggleResolved={() => setThreadResolved(ord.id, t.id, !t.geloest)}
                 onSend={(text, anh) => sendThreadMsg(ord.id, t.id, text, anh)}
                 placeholder={isIntern ? "Antwort zu dieser Position …" : "Rückfrage zu dieser Position …"}
