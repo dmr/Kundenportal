@@ -30,6 +30,14 @@ Die App liegt dann unter `https://<user>.github.io/Kundenportal/`.
 - **Base-Path** `/Kundenportal/` ist in `vite.config.js` einheitlich für dev/build/preview gesetzt (Repo-Name). Bei Umbenennung anpassen. Statische Assets unter `public/` (z. B. `public/products/*.jpg`) via `import.meta.env.BASE_URL` referenzieren.
 - **HashRouter** (`#/…`) macht Deep-Links ohne Server-Rewrite robust — passend für GitHub Pages.
 
+## PWA (installierbar)
+
+Die App ist als **Progressive Web App** installierbar (Manifest + Service Worker via
+`vite-plugin-pwa`): „Zum Startbildschirm hinzufügen" / Installieren im Browser, startet
+dann im Standalone-Fenster und funktioniert offline (App-Shell wird gecacht, `autoUpdate`).
+Icons werden reproduzierbar erzeugt: `node scripts/gen-icons.cjs` → `public/icons/`.
+Hinweis: Installierbarkeit braucht HTTPS — gegeben über GitHub Pages (lokal via `npm run preview`).
+
 ## Aufbau
 
 ```
