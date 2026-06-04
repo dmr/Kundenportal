@@ -16,6 +16,11 @@ export function Status({ s }) {
   return <span className="chip" style={{ background: st.bg, color: st.fg }}>{s}</span>;
 }
 
+// Kennzeichnet (in der internen Sicht), ob etwas auch der Kunde sieht oder nur intern ist.
+export function SichtBadge({ intern }) {
+  return <span className={"sichttag " + (intern ? "i" : "k")}>{intern ? "🔒 nur intern" : "👁 Kunde sieht das"}</span>;
+}
+
 export function Stepper({ stage }) {
   const ci = stageIdx(stage);
   // Beim Abschluss (letzte Stage) ist auch der letzte Punkt erledigt, nicht "current".

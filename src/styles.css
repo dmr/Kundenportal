@@ -90,6 +90,14 @@
 .linkbtn.muted{color:var(--muted);}
 .subh{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:16px 0 8px;}
 .internbadge{font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:#DEE6F2;color:var(--intern);padding:2px 7px;border-radius:20px;font-weight:600;}
+.sichttag{display:inline-block;font-size:10px;letter-spacing:.02em;text-transform:none;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.sichttag.i{background:#DEE6F2;color:var(--intern);}
+.sichttag.k{background:#DCE7DC;color:#3F6B3F;}
+.sichtlegende{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);margin:-12px 0 16px;}
+.help-btn{width:18px;height:18px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:11px;line-height:1;cursor:pointer;font-weight:700;text-transform:none;letter-spacing:0;}
+.help-btn:hover{border-color:var(--accent);color:var(--accent);}
+.helpbox{background:#FCF6F0;border:1px solid var(--accent-soft);border-radius:10px;padding:14px 16px;margin-bottom:12px;font-size:13.5px;text-transform:none;letter-spacing:normal;color:var(--ink);}
+.helpbox ul{margin:8px 0 0;padding-left:18px;font-weight:400;} .helpbox li{margin-bottom:5px;}
 .statsel{font:inherit;font-size:12px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer;}
 .taskcard{border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-bottom:8px;background:#fff;}
 .taskcard .tcrow{display:flex;align-items:center;gap:12px;} .taskcard .grow{flex:1;min-width:0;} .taskcard .tcname{font-weight:600;font-size:14px;} .taskcard .tcmeta{font-size:12px;color:var(--muted);margin-top:2px;}

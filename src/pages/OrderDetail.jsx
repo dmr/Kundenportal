@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useStore } from "../store.jsx";
 import { STAGES, STATI, stageIdx, suggestStage, threadOpen, PRIO_RANK, parseEUR, fmtEUR } from "../data/portal.js";
-import { Status, Stepper, clickable } from "../components/ui.jsx";
+import { Status, Stepper, clickable, SichtBadge } from "../components/ui.jsx";
 import PositionSheet from "../components/PositionSheet.jsx";
 import Thread from "../components/Thread.jsx";
 import NewThreadForm from "../components/NewThreadForm.jsx";
@@ -15,6 +15,7 @@ export default function OrderDetail() {
   const [queryText, setQueryText] = useState("");
   const [newThread, setNewThread] = useState(false);
   const [showResolved, setShowResolved] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const ord = orderById(ordId);
   if (!ord) return <Navigate to={isIntern ? "/intern" : "/kunde"} replace />;
@@ -57,6 +58,7 @@ export default function OrderDetail() {
       {ord.geraetId && (() => { const g = geraetById(ord.geraetId); return g ? (
         <div className="devline">🔧 Gerät: <b>{g.bezeichnung}</b> · SN <span className="mono">{g.seriennummer}</span></div>
       ) : null; })()}
+      {isIntern && <div className="sichtlegende"><SichtBadge /> auch für den Kunden sichtbar · <SichtBadge intern /> nur intern</div>}
 
       {/* Status + Aussage „wir sind dran, liefern bis X" in einem Block */}
       <Stepper stage={ord.stage} />
@@ -89,7 +91,8 @@ export default function OrderDetail() {
           {suggested !== ord.stage
             ? <button className="btn ghost sm" onClick={() => setStage(ord.id, suggested)}>Vorschlag übernehmen: {STAGES[stageIdx(suggested)].label}</button>
             : <span className="sent">✓ passt zum Stand</span>}
-          <span className="note" style={{ margin: 0 }}>Vorschlag aus Teilaufgaben & Belegen – übersteuerbar.</span>
+          <SichtBadge intern />
+          <span className="note" style={{ margin: 0 }}>Steuert den für den Kunden sichtbaren Fortschritt.</span>
         </div>
       )}
 
@@ -132,6 +135,7 @@ export default function OrderDetail() {
           <Status s={offer.status} />
           {offer.status === "offen" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "in Klärung")}>Auf „in Klärung" setzen</button>}
           {offer.status === "in Klärung" && <button className="btn ghost sm" onClick={() => setOfferStatus(ord.id, "offen")}>Erneut zur Freigabe stellen</button>}
+          <SichtBadge intern />
           <span className="note" style={{ margin: 0 }}>Steuert, was der Kunde zur Freigabe sieht.</span>
         </div>
       )}
@@ -139,7 +143,8 @@ export default function OrderDetail() {
       {/* Inhalt: Themen, an denen wir arbeiten. Doku-Karten nur intern, Preise dezent. */}
       {offer ? (
         <>
-          {isIntern && (
+          {isIntern && (<>
+            <div className="sec" style={{ marginTop: 4 }}>Belege <SichtBadge intern /></div>
             <div className="dual">
               <div className="sumcard">
                 <div className="subh" style={{ margin: 0 }}>Angebot</div>
@@ -156,9 +161,9 @@ export default function OrderDetail() {
                 {ord.lieferschein && <div className="summeta" style={{ marginTop: 12 }}>Lieferschein <span className="mono">{ord.lieferschein.nr}</span> · <Status s={ord.lieferschein.status} /></div>}
               </div>
             </div>
-          )}
+          </>)}
 
-          <div className="sec" style={{ marginTop: 4 }}>{isIntern ? "Positionen" : "Daran arbeiten wir"} <span className="note" style={{ margin: 0, fontStyle: "normal" }}>· antippen für Details</span></div>
+          <div className="sec" style={{ marginTop: 4 }}>{isIntern ? "Positionen" : "Daran arbeiten wir"} {isIntern && <SichtBadge />} <span className="note" style={{ margin: 0, fontStyle: "normal" }}>· antippen für Details</span></div>
           <div className="card">
             {offer.positionen.map((p) => {
               const done = vTasks(p).filter((t) => t.status === "erledigt").length, tot = vTasks(p).length;
@@ -181,7 +186,7 @@ export default function OrderDetail() {
 
       {isIntern && ord.internePlanung?.length > 0 && (
         <>
-          <div className="sec">Interne Planung <span className="internbadge">nur intern</span></div>
+          <div className="sec">Interne Planung <SichtBadge intern /></div>
           <div className="card" style={{ padding: "4px 20px" }}>
             <ul className="tl">
               {ord.internePlanung.map((t) => (
@@ -202,12 +207,26 @@ export default function OrderDetail() {
 
       <div style={{ marginTop: 24 }}>
         <div className="sec" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-          <span>{isIntern ? "Kommunikation" : "Rückfragen & weitere Punkte"}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            {isIntern ? <>Kommunikation <SichtBadge /></> : <>Rückfragen & weitere Punkte
+              <button className="help-btn" onClick={() => setShowHelp((v) => !v)} aria-label="Wie funktionieren Themen?" aria-expanded={showHelp}>?</button></>}
+          </span>
           <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {resolvedCount > 0 && <button className="linkbtn" onClick={() => setShowResolved((v) => !v)}>{showResolved ? "Gelöste ausblenden" : "Gelöste anzeigen (" + resolvedCount + ")"}</button>}
             {!newThread && <button className="btn ghost sm" onClick={() => setNewThread(true)}>+ Neues Thema</button>}
           </span>
         </div>
+        {!isIntern && showHelp && (
+          <div className="helpbox">
+            <b>So funktionieren Themen</b>
+            <ul>
+              <li>Eröffnen Sie pro Anliegen ein eigenes <b>Thema</b> („+ Neues Thema") und geben Sie ihm einen Titel und eine Priorität.</li>
+              <li>Schreiben Sie Nachrichten und hängen Sie <b>Bilder oder PDFs</b> an (📎). Wir antworten direkt im selben Thema.</li>
+              <li>Mit <b>▸/▾</b> klappen Sie ein Thema ein und aus.</li>
+              <li>Ist Ihr Anliegen geklärt, tippen Sie <b>„Als gelöst markieren"</b>. Eine neue Nachricht öffnet das Thema automatisch wieder.</li>
+            </ul>
+          </div>
+        )}
         {!isIntern && <div className="muted small" style={{ marginBottom: 10 }}>Eröffnen Sie je Anliegen ein Thema, hängen Sie Screenshots/PDFs an und markieren Sie es als gelöst, wenn es passt.</div>}
         {newThread && <NewThreadForm onCancel={() => setNewThread(false)} onCreate={(d) => { createThread(ord.id, { ...d, positionId: null }, d.text); setNewThread(false); }} />}
         {visibleThreads.length === 0 && !newThread && <div className="card"><div className="empty">{generalThreads.length === 0 ? "Noch keine Themen — legen Sie über + Neues Thema eines an." : "Keine offenen Themen — alle erledigt."}</div></div>}
