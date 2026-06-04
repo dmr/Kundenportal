@@ -13,7 +13,7 @@ function Attachment({ a }) {
 
 /* Konversations-Thread: zusammenhängend, mit Priorität und „als gelöst markieren".
    Nachrichten können Bilder/PDFs als Anhang tragen. */
-export default function Thread({ title, messages, resolved, prioritaet = "normal", onToggleResolved, onPriority, onTitle, onSend, placeholder, emptyText = "Noch keine Nachrichten." }) {
+export default function Thread({ title, messages, resolved, prioritaet = "normal", users = [], meEmail, onToggleResolved, onPriority, onTitle, onSend, placeholder, emptyText = "Noch keine Nachrichten." }) {
   const { isIntern } = useStore();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState([]); // [{name, typ, url}]
@@ -26,6 +26,12 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
   const last = messages[messages.length - 1];
   const lastMine = last && (isIntern ? last.dir === "out" : last.dir === "in");
   const lastText = last ? (last.text || (last.anhaenge?.length ? "📎 Anhang" : "")) : "";
+
+  // Empfänger: standardmäßig alle im Thread Aktiven (sonst Gegenseite), ohne mich selbst.
+  const participants = [...new Set(messages.map((m) => m.from).filter(Boolean))];
+  const counterpart = users.filter((u) => (isIntern ? u.rolle === "kunde" : u.rolle === "team")).map((u) => u.email);
+  const [to, setTo] = useState((participants.length ? participants : counterpart).filter((e) => e && e !== meEmail));
+  const nameFor = (email) => users.find((u) => u.email === email)?.name || email;
 
   const onFiles = (e) => {
     [...e.target.files].forEach((f) => {
@@ -42,7 +48,7 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
 
   const send = () => {
     if (!draft.trim() && pending.length === 0) return;
-    onSend(draft.trim(), pending);
+    onSend(draft.trim(), pending, to);
     setDraft(""); setPending([]); setSent(true);
   };
 
@@ -81,10 +87,11 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
         {messages.map((m, i) => {
           const mine = isIntern ? m.dir === "out" : m.dir === "in";
           return (
-            <div className={"tmsg " + (mine ? "mine" : "their")} key={i}>
-              <div className="tmeta">{mine ? "Sie" : isIntern ? "Kunde" : "Wir"}{m.datum ? " · " + m.datum : ""}</div>
+            <div className={"tmsg " + (mine ? "mine" : "their") + (m.viaEmail ? " email" : "")} key={i}>
+              <div className="tmeta">{mine ? "Sie" : isIntern ? "Kunde" : "Wir"}{m.viaEmail && <> <span className="mailtag">✉ E-Mail</span></>}{m.datum ? " · " + m.datum : ""}</div>
               {m.text && <div className="tbubble">{m.text}</div>}
               {m.anhaenge?.length > 0 && <div className="att-row">{m.anhaenge.map((a, j) => <Attachment a={a} key={j} />)}</div>}
+              {m.to?.length > 0 && <div className="rcpt-line">✉ an: {m.to.map(nameFor).join(", ")}</div>}
             </div>
           );
         })}
@@ -97,6 +104,15 @@ export default function Thread({ title, messages, resolved, prioritaet = "normal
         </div>
       ) : (
         <div className="thread-foot">
+          <div className="recipients">
+            <span className="rcpt-label">✉ An:</span>
+            {to.map((e) => <span className="rcpt" key={e}>{nameFor(e)}<button onClick={() => setTo(to.filter((x) => x !== e))} aria-label="Empfänger entfernen">×</button></span>)}
+            {to.length === 0 && <span className="muted small">keine Empfänger</span>}
+            <select className="rcpt-add" value="" onChange={(e) => { if (e.target.value) setTo([...new Set([...to, e.target.value])]); }} aria-label="Empfänger hinzufügen">
+              <option value="">+ Empfänger…</option>
+              {users.filter((u) => !to.includes(u.email) && u.email !== meEmail).map((u) => <option key={u.email} value={u.email}>{u.name}</option>)}
+            </select>
+          </div>
           <textarea placeholder={placeholder} value={draft} onChange={(e) => { setDraft(e.target.value); setSent(false); }} />
           {pending.length > 0 && (
             <div className="att-pending">

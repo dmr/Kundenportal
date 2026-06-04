@@ -9,7 +9,7 @@ import NewThreadForm from "../components/NewThreadForm.jsx";
 
 export default function OrderDetail() {
   const { ordId } = useParams();
-  const { orderById, custOf, geraetById, isIntern, meCust, vTasks, sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
+  const { orderById, custOf, geraetById, isIntern, meCust, meEmail, recipientsFor, vTasks, sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle, setIPStatus, setStage, acceptOffer, setOfferStatus } = useStore();
   const [openPosId, setOpenPosId] = useState(null);
   const [querying, setQuerying] = useState(false);
   const [queryText, setQueryText] = useState("");
@@ -238,10 +238,12 @@ export default function OrderDetail() {
               messages={t.nachrichten}
               resolved={t.geloest}
               prioritaet={t.prioritaet}
+              users={recipientsFor(ord.customerId)}
+              meEmail={meEmail}
               onPriority={(v) => setThreadPriority(ord.id, t.id, v)}
               onTitle={(v) => setThreadTitle(ord.id, t.id, v)}
               onToggleResolved={() => setThreadResolved(ord.id, t.id, !t.geloest)}
-              onSend={(text, anh) => sendThreadMsg(ord.id, t.id, text, anh)}
+              onSend={(text, anh, to) => sendThreadMsg(ord.id, t.id, text, anh, to)}
               placeholder={isIntern ? "Antwort schreiben …" : "Nachricht schreiben …"}
             />
           ))}

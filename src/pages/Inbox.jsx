@@ -143,7 +143,9 @@ export default function Inbox() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
           {mails.map((m) => (
             <MailTriage key={m.id} mail={m} customers={db.customers} ordersOf={ordersOf} custByEmail={custByEmail}
-              onAppend={appendMailToThread} onAssign={assignMailToOrder} onNew={onNew} />
+              onAppend={(id, ordId, thId) => { appendMailToThread(id, ordId, thId); nav("/auftrag/" + ordId); }}
+              onAssign={(id, ordId) => { assignMailToOrder(id, ordId); nav("/auftrag/" + ordId); }}
+              onNew={onNew} />
           ))}
         </div>
       )}

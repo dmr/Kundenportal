@@ -299,4 +299,13 @@ export const SEED = {
     { id: "m1", from: "qs@igbt-modulhersteller-a.de", betreff: "Frage zum Kalibrierintervall TLW 800", datum: "2026-06-01 08:12", body: "Können wir das Kalibrierintervall des TLW 800 auf 24 Monate verlängern?", anhaenge: [] },
     { id: "m2", from: "labor@thyristor-hersteller-b.de", betreff: "Neue Anfrage: Wartung benötigt", datum: "2026-06-01 09:30", body: "Wir benötigen kurzfristig eine Wartung. Bitte um Rückmeldung.", anhaenge: [] },
   ],
+  // Plattform-Benutzer (als E-Mail-Empfänger auswählbar). rolle: team | kunde.
+  users: [
+    { email: "service@ihr-betrieb.de", name: "Service-Team", rolle: "team" },
+    { email: "technik@ihr-betrieb.de", name: "Technik", rolle: "team" },
+    { email: "einkauf@igbt-modulhersteller-a.de", name: "D. Meier · Einkauf (IGBT A)", rolle: "kunde", customerId: "c1" },
+    { email: "qs@igbt-modulhersteller-a.de", name: "QS (IGBT A)", rolle: "kunde", customerId: "c1" },
+    { email: "disposition@thyristor-hersteller-b.de", name: "P. Schneider · Disposition (Thyristor B)", rolle: "kunde", customerId: "c2" },
+    { email: "labor@thyristor-hersteller-b.de", name: "Labor (Thyristor B)", rolle: "kunde", customerId: "c2" },
+  ],
 };

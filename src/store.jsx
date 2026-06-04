@@ -9,7 +9,7 @@ const StoreContext = createContext(null);
 const STORAGE_KEY = "kundenportal";
 // Bei Schema-/Seed-Änderungen erhöhen: alte gespeicherte Daten werden dann
 // verworfen, damit neue Beispieldaten & Felder sicher erscheinen.
-const STORAGE_VERSION = 11;
+const STORAGE_VERSION = 12;
 
 function loadPersisted() {
   try {
@@ -47,6 +47,9 @@ export function StoreProvider({ children }) {
 
   const isIntern = persp?.mode === "intern";
   const meCust = persp?.mode === "kunde" ? db.customers.find((c) => c.id === persp.customerId) : null;
+  const meEmail = isIntern ? ME : meCust?.email;
+  // Auswählbare E-Mail-Empfänger für einen Vorgang: Team + Kontakte dieses Kunden.
+  const recipientsFor = (cid) => (db.users || []).filter((u) => u.rolle === "team" || u.customerId === cid);
 
   // ---- Lese-Helfer -------------------------------------------------------
   const ordersOf = (id) => db.orders.filter((o) => o.customerId === id);
@@ -81,15 +84,15 @@ export function StoreProvider({ children }) {
   function setThread(orderId, threadId, fn) {
     mut(orderId, (o) => ({ ...o, threads: o.threads.map((t) => (t.id === threadId ? fn(t) : t)) }));
   }
-  function newMessage(text, anhaenge) {
+  function newMessage(text, anhaenge, to) {
     const stamp = new Date().toISOString().slice(0, 16).replace("T", " ");
-    return { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text, anhaenge: anhaenge || [] };
+    return { dir: isIntern ? "out" : "in", from: isIntern ? ME : meCust.email, datum: stamp, text, anhaenge: anhaenge || [], to: to || [] };
   }
-  // Nachricht senden – öffnet den Thread automatisch wieder.
-  function sendThreadMsg(orderId, threadId, text, anhaenge) {
+  // Nachricht senden (geht per E-Mail an die Empfänger) – öffnet den Thread wieder.
+  function sendThreadMsg(orderId, threadId, text, anhaenge, to) {
     const t = (text || "").trim();
     if (!t && !(anhaenge && anhaenge.length)) return;
-    setThread(orderId, threadId, (th) => ({ ...th, geloest: false, nachrichten: [...th.nachrichten, newMessage(t, anhaenge)] }));
+    setThread(orderId, threadId, (th) => ({ ...th, geloest: false, geloestAm: null, nachrichten: [...th.nachrichten, newMessage(t, anhaenge, to)] }));
   }
   // Neuen (benannten) Thread anlegen, optional an eine Position gebunden.
   function createThread(orderId, { titel, prioritaet, positionId }, text, anhaenge) {
@@ -108,7 +111,7 @@ export function StoreProvider({ children }) {
 
   // ---- Geteiltes Postfach (service@) -------------------------------------
   const custByEmail = (from) => customerByEmail(db.customers, from);
-  function mailToMessage(m) { return { dir: "in", from: m.from, datum: m.datum, text: m.body, anhaenge: m.anhaenge || [] }; }
+  function mailToMessage(m) { return { dir: "in", from: m.from, datum: m.datum, text: m.body, anhaenge: m.anhaenge || [], viaEmail: true }; }
   // Eingehende Mail: passt der Betreff zu einem Thread → als Antwort einsortieren,
   // sonst landet sie unzugeordnet im Postfach.
   function addIncomingMail({ from, betreff, body, anhaenge }) {
@@ -194,7 +197,7 @@ export function StoreProvider({ children }) {
   }
 
   const value = {
-    db, persp, setPersp, resetDemo, isIntern, meCust, newAnfrage, setNewAnfrage,
+    db, persp, setPersp, resetDemo, isIntern, meCust, meEmail, recipientsFor, newAnfrage, setNewAnfrage,
     ordersOf, custOf, orderById, geraeteOf, geraetById, ordersForGeraet, vTasks, latestIncoming, handlungsbedarf,
     custByEmail, addIncomingMail, appendMailToThread, assignMailToOrder, assignMailToNewOrder,
     sendThreadMsg, createThread, setThreadResolved, setThreadPriority, setThreadTitle, acceptOffer, setOfferStatus, setTaskStatus, addPositionTask, setIPStatus, setStage, addCalibration, addSoftwareUpdate, createAnfrage,
