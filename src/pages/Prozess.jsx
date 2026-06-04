@@ -3,44 +3,16 @@ import { useStore } from "../store.jsx";
 import { STAGES, stageIdx } from "../data/portal.js";
 import Mermaid from "../components/Mermaid.jsx";
 
-// Genereller Ablauf über alle Beteiligten (Swimlanes).
+// Einfacher, linearer Ablauf mit einer Verzweigung (Beteiligte je Schritt in Klammern).
 const DIAGRAM = `
 flowchart TD
-  subgraph KUNDE["Kunde"]
-    direction TB
-    K1["Anfrage stellen (Kalibrierung / Service / Sonstiges)"]
-    K2{"Angebot prüfen"}
-    K3["Fortschritt verfolgen"]
-    K4["Lieferung &amp; Zertifikat erhalten"]
-  end
-  subgraph TEAM["Team · Innendienst"]
-    direction TB
-    T1["Anfrage im Posteingang sichten"]
-    T2["Angebot mit Positionen erstellen"]
-    T3["Auftrag bestätigen &amp; Bestellung auslösen"]
-    T4["Status pflegen · Rückfragen beantworten"]
-  end
-  subgraph LABOR["Werkstatt · Kalibrierlabor"]
-    direction TB
-    L1["Teilaufgaben ausführen"]
-    L2["Kalibrierung / Service durchführen"]
-    L3["Kalibrierzertifikat ausstellen"]
-  end
-  subgraph LOG["Disposition · Logistik"]
-    direction TB
-    D1["Auslieferung planen &amp; zustellen"]
-  end
-  K1 --> T1 --> T2 --> K2
-  K2 -- "annehmen" --> T3
-  K2 -- "Rückfrage (in Klärung)" --> T4
-  T4 --> T2
-  T3 --> L1
-  T3 --> L2
-  L1 --> D1
-  L2 --> L3
-  D1 --> K3
-  L3 --> K3
-  K3 --> K4
+  A["Anfrage<br/>(Kunde)"] --> B["Angebot erstellen<br/>(Team)"]
+  B --> C{"Angebot prüfen<br/>(Kunde)"}
+  C -- "Rückfrage" --> B
+  C -- "annehmen" --> D["Auftrag &amp; Bestellung<br/>(Team)"]
+  D --> E["Kalibrierung / Service<br/>(Werkstatt · Labor)"]
+  E --> F["Lieferung &amp; Zertifikat<br/>(Disposition)"]
+  F --> G["Abgeschlossen"]
 `;
 
 const BETEILIGTE = [
